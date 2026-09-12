@@ -55,6 +55,14 @@ try {
     if (statSync(local).isDirectory()) await client.uploadFromDir(local, name);
     else await client.uploadFrom(local, name);
   }
+  // Fichiers propres à un hébergement Apache/PHP : ils ne sont pas dans dist/
+  // (sinon Vercel les servirait en clair au lieu d'exécuter sa fonction).
+  const php = resolve("deploy", "php");
+  if (existsSync(php)) {
+    console.log("  ↑ deploy/php (.htaccess, api/tmdb.php)");
+    await client.uploadFromDir(php);
+  }
+
   console.log("  ↑ index.html");
   await client.uploadFrom(join(dist, "index.html"), "index.html");
 

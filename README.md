@@ -77,7 +77,10 @@ Navigateur ──► /api/tmdb.php?path=/movie/550 ──► api.themoviedb.org/
 
 - **En développement**, `/api/tmdb.php` est servi par un middleware Vite (`server/tmdb-dev-proxy.ts`) qui lit
   `TMDB_API_KEY` dans `.env`. Pas de préfixe `VITE_` → la variable ne quitte pas Node.
-- **En production**, `public/api/tmdb.php` fait le même travail sur LWS. Il cherche la clé, dans l'ordre :
+- **En production sur Vercel**, c'est la fonction serverless `api/tmdb.js` qui s'en charge ; la clé est
+  stockée dans les variables d'environnement du projet Vercel. `vercel.json` réécrit `/api/tmdb.php` vers elle,
+  pour que le code client reste identique quel que soit l'hébergement.
+- **Sur un hébergement PHP**, `deploy/php/api/tmdb.php` fait le même travail. Il cherche la clé, dans l'ordre :
   1. la variable d'environnement `TMDB_API_KEY` ;
   2. **`tmdb-config.php` placé un niveau au-dessus du dossier web** (méthode recommandée) ;
   3. `api/tmdb-config.php` (repli, accès HTTP bloqué par `api/.htaccess`).
@@ -95,16 +98,33 @@ npm run build     # vérification TypeScript + build optimisé dans dist/
 npm run preview   # sert dist/ avec les mêmes en-têtes de sécurité (CSP) que la prod
 ```
 
-## 5. Déploiement sur LWS
+## 5. Déploiement sur Vercel
 
-Arborescence attendue sur l'hébergement (le dossier web s'appelle généralement `htdocs` chez LWS —
-vérifiez dans votre espace client) :
+Le dépôt GitHub est connecté à Vercel : chaque `git push` sur `main` redéploie le site.
+
+1. Sur <https://vercel.com>, **Add New → Project**, importer le dépôt `cineyast`.
+2. Vercel détecte Vite tout seul (build `npm run build`, sortie `dist`) — ne rien changer.
+3. **Environment Variables** : ajouter `TMDB_API_KEY` avec votre clé, pour les trois environnements
+   (Production, Preview, Development). C'est le seul endroit où elle vit côté serveur.
+4. **Deploy**, puis vérifier <https://VOTRE-PROJET.vercel.app/api/tmdb.php?path=/genre/movie/list> :
+   la liste des genres doit s'afficher en JSON.
+5. **Settings → Domains** : ajouter `cineyast.com`, puis créer chez votre registrar les enregistrements DNS
+   indiqués par Vercel (un `A` sur l'apex et un `CNAME` pour `www`). Le certificat HTTPS est automatique.
+
+Après modification de `TMDB_API_KEY`, il faut **redéployer** pour que la fonction prenne la nouvelle valeur.
+
+## 6. Alternative : hébergement PHP (LWS, OVH, o2switch…)
+
+Le proxy PHP est conservé dans `deploy/php/` — volontairement **hors de `public/`**, sinon il serait copié
+dans `dist/` et Vercel servirait son code source en clair au lieu d'exécuter sa fonction.
+
+Arborescence attendue sur l'hébergement :
 
 ```
 /                         ← racine FTP (non publique)
 ├── tmdb-config.php       ← votre clé, hors d'atteinte depuis Internet
 ├── cineyast-cache/       ← créé automatiquement par le proxy
-└── htdocs/               ← contenu de dist/
+└── htdocs/               ← contenu de dist/ + deploy/php/
     ├── .htaccess
     ├── index.html
     ├── assets/…
@@ -113,25 +133,18 @@ vérifiez dans votre espace client) :
         └── tmdb.php
 ```
 
-**Première mise en ligne**
+1. Vérifier que **PHP ≥ 7.4** est actif et activer le certificat SSL de l'hébergeur.
+2. Copier `deploy/tmdb-config.example.php` en `deploy/tmdb-config.php` et y coller la clé.
+3. Copier `.env.deploy.example` en `.env.deploy`, renseigner les accès FTP, puis :
+   ```bash
+   npm run build
+   npm run deploy -- --config
+   ```
+   (ou envoyer à la main `dist/` **et** `deploy/php/` dans le dossier web avec FileZilla).
+4. Tester `/api/tmdb.php?path=/genre/movie/list`.
+5. Une fois le HTTPS actif, décommenter les 3 lignes « HTTPS forcé » de `deploy/php/.htaccess` et redéployer.
 
-1. Espace client LWS : vérifiez que **PHP ≥ 7.4** est actif (8.x recommandé) et activez le **certificat SSL
-   Let's Encrypt** gratuit pour cineyast.com.
-2. Copiez `deploy/tmdb-config.example.php` en `deploy/tmdb-config.php` et collez-y votre clé.
-3. Envoyez les fichiers, au choix :
-   - **FileZilla** : tout le contenu de `dist/` (fichiers cachés inclus, notamment `.htaccess`) dans `/htdocs`,
-     et `deploy/tmdb-config.php` à la racine FTP ;
-   - **ou le script** : copiez `.env.deploy.example` en `.env.deploy`, renseignez vos accès FTP, puis
-     ```bash
-     npm run build
-     npm run deploy -- --config
-     ```
-4. Testez le proxy : <https://cineyast.com/api/tmdb.php?path=/genre/movie/list> doit renvoyer la liste des genres en JSON.
-5. Une fois le HTTPS fonctionnel, décommentez les 3 lignes « HTTPS forcé » de `public/.htaccess` et redéployez.
-
-**Mises à jour suivantes** : `npm run build && npm run deploy` (la clé reste en place sur le serveur).
-
-## 6. Attribution TMDB
+## 7. Attribution TMDB
 
 Le pied de page affiche la mention exigée : « Ce produit utilise l'API TMDB mais n'est pas approuvé ou
 certifié par TMDB », avec un lien vers themoviedb.org. Les conditions TMDB demandent aussi d'afficher leur
@@ -151,8 +164,11 @@ src/
 ├── hooks/           requêtes TMDB, favoris (localStorage), utilitaires
 ├── lib/             client TMDB typé, formatage FR, slugs
 └── pages/           Accueil, Explorer, Fiche film, Favoris, 404
+api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
 server/              proxy TMDB de développement + CSP partagée
-public/              .htaccess (SPA, cache, sécurité), api/tmdb.php (proxy de prod)
+public/              favicon, robots.txt
+deploy/php/          .htaccess + proxy PHP, pour un hébergement mutualisé
+vercel.json          réécritures (SPA, /api/tmdb.php) et en-têtes de sécurité
 ```
 
 ## Pistes pour la v2
