@@ -144,13 +144,31 @@ Arborescence attendue sur l'hébergement :
 4. Tester `/api/tmdb.php?path=/genre/movie/list`.
 5. Une fois le HTTPS actif, décommenter les 3 lignes « HTTPS forcé » de `deploy/php/.htaccess` et redéployer.
 
-## 7. Attribution TMDB
+## 7. Aperçus de partage des fiches films
 
-Le pied de page affiche la mention exigée : « Ce produit utilise l'API TMDB mais n'est pas approuvé ou
-certifié par TMDB », avec un lien vers themoviedb.org. Les conditions TMDB demandent aussi d'afficher leur
-**logo officiel**, moins proéminent que le vôtre : téléchargez-le sur
-<https://www.themoviedb.org/about/logos-attribution> et ajoutez-le dans `src/components/layout/Footer.tsx`
-(pensez à le placer dans `public/`, la CSP n'autorise que les images locales et TMDB).
+Les robots de LinkedIn, WhatsApp ou Slack n'exécutent pas JavaScript : sans traitement, chaque fiche film
+partagée affichait l'aperçu générique de la page d'accueil.
+
+`vercel.json` réécrit donc `/film/:slug` vers la fonction `api/film.js`, qui lit l'`index.html` du
+déploiement et y injecte les balises du film : titre et année, synopsis tronqué à 200 caractères, image
+paysage (1280×720), URL canonique sur `cineyast.com`, Open Graph et Twitter. Les visiteurs reçoivent la
+même application React ; la réponse est mise en cache une heure sur le CDN.
+
+Si le film est inconnu ou si TMDB ne répond pas, la page d'origine est servie telle quelle.
+
+- **Tester un aperçu** : <https://www.linkedin.com/post-inspector/> avec l'URL de la fiche. Relancer
+  l'inspection force aussi LinkedIn à rafraîchir son cache.
+- **En développement**, `npm run dev` sert l'application sans cette fonction : les balises des fiches ne
+  sont enrichies qu'une fois déployé sur Vercel.
+
+## 8. Attribution TMDB
+
+Le pied de page affiche les deux éléments exigés par les conditions d'utilisation de TMDB :
+
+- la mention « Ce produit utilise l'API TMDB mais n'est pas approuvé ou certifié par TMDB » ;
+- le **logo officiel** (`public/tmdb-logo.svg`, version courte issue de
+  <https://www.themoviedb.org/about/logos-attribution>), lié à themoviedb.org et moins proéminent que le
+  logotype Cineyast. Il est servi depuis le domaine, la CSP n'autorisant que les images locales et TMDB.
 
 ## Structure
 
@@ -165,14 +183,16 @@ src/
 ├── lib/             client TMDB typé, formatage FR, slugs
 └── pages/           Accueil, Explorer, Fiche film, Favoris, 404
 api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
+api/film.js          balises de partage propres à chaque fiche film (Vercel)
 server/              proxy TMDB de développement + CSP partagée
 public/              favicon, robots.txt
 deploy/php/          .htaccess + proxy PHP, pour un hébergement mutualisé
-vercel.json          réécritures (SPA, /api/tmdb.php) et en-têtes de sécurité
+vercel.json          réécritures (/api/tmdb.php, /film/:slug, repli SPA) et en-têtes de sécurité
 ```
 
 ## Pistes pour la v2
 
 - Plateformes de streaming en France (`/movie/{id}/watch/providers`, attribution JustWatch requise)
 - Pages acteurs et réalisateurs (filmographies)
-- Pré-rendu des fiches pour le SEO et le partage sur les réseaux sociaux
+- Intégration continue (GitHub Actions : vérification TypeScript et build à chaque push)
+- Pré-rendu du contenu complet des fiches pour le référencement (les balises de partage sont déjà servies)
