@@ -7,6 +7,14 @@ bande-annonce, recommandations, et une liste de favoris personnelle.
 Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de l'API publique
 [TMDB](https://www.themoviedb.org/) — aucune donnée de film n'est codée en dur.
 
+![Page d'accueil de Cineyast : carrousel des tendances de la semaine](docs/capture-accueil.jpg)
+
+*Accueil — les tendances de la semaine dans un carrousel « pellicule », données réelles de l'API TMDB.*
+
+![Fiche détaillée du film Fight Club : affiche, note, réalisation et bande-annonce](docs/capture-fiche.jpg)
+
+*Fiche film — note, classification française, casting, bande-annonce et recommandations.*
+
 ## Stack
 
 | Rôle | Choix |

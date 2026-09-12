@@ -211,7 +211,7 @@ export function HeroCarousel({
             </motion.p>
           ) : null}
 
-          <AnimatePresence mode="popLayout" initial={false}>
+          <AnimatePresence mode="wait" initial={false}>
             <motion.h2
               key={active.id}
               className="font-display leading-[0.95] font-medium tracking-[-0.01em]"
