@@ -1,0 +1,14 @@
+node_modules
+dist
+*.local
+
+# Secrets : clé TMDB et identifiants FTP
+.env
+.env.*
+!.env.example
+!.env.deploy.example
+tmdb-config.php
+!deploy/tmdb-config.example.php
+
+.DS_Store
+Thumbs.db

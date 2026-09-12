@@ -1,0 +1,6 @@
+# Le fichier de configuration de repli ne doit jamais être servi.
+<Files "tmdb-config.php">
+  Require all denied
+</Files>
+
+Options -Indexes

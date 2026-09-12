@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* ─── Système visuel « salle obscure » ─────────────────────────────────────
+   Noir chaud (pas de gris bleuté), or de dorure, velours rouge de fauteuil.
+   Titres en Didone (Bodoni Moda), signalétique en grotesque condensée
+   façon marquise de cinéma (Big Shoulders), texte courant en Hanken Grotesk. */
+
+@theme {
+  --color-ink: #0c0a09;
+  --color-ink-2: #15110f;
+  --color-ink-3: #211b17;
+  --color-line: rgb(232 215 180 / 0.12);
+  --color-line-strong: rgb(232 215 180 / 0.24);
+  --color-bone: #efe6d4;
+  --color-mute: #a69d8c;
+  --color-gold: #c8a45a;
+  --color-gold-bright: #e4c47f;
+  --color-velvet: #8f1d1d;
+  --color-velvet-bright: #b52a25;
+
+  --font-display: "Bodoni Moda Variable", "Bodoni 72", Didot, "Times New Roman", serif;
+  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-marquee: "Big Shoulders Display Variable", "Arial Narrow", sans-serif;
+
+  --ease-cine: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-fade-up: fade-up 0.7s var(--ease-cine) both;
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  @keyframes shimmer {
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-color: var(--color-ink-3) var(--color-ink);
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Grain de pellicule sur toute la page, très discret. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  ::selection {
+    background: var(--color-velvet);
+    color: var(--color-bone);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* Libellés en capitales condensées, comme sur la marquise d'une salle. */
+@utility marquee {
+  font-family: var(--font-marquee);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+/* Rangée d'ampoules de marquise, utilisée comme séparateur. */
+@utility marquee-lights {
+  height: 8px;
+  background: radial-gradient(circle, var(--color-gold) 0 2px, transparent 2.6px) 0 50% / 18px 8px repeat-x;
+  opacity: 0.45;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Gouttière de page : contenu centré sur --page-max, mais les rangées
+   défilantes peuvent déborder jusqu'au bord de l'écran tout en restant
+   alignées sur la grille. */
+:root {
+  --gutter: 1.25rem;
+  --page-max: 1440px;
+}
+@media (width >= 48rem) {
+  :root {
+    --gutter: 2.5rem;
+  }
+}
+
+@utility px-page {
+  padding-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2 + var(--gutter)));
+}
+
+@utility scroll-px-page {
+  scroll-padding-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2 + var(--gutter)));
+}
+
+@keyframes loading-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+/* Placeholder de chargement : reflet qui glisse, sans arrondi. */
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-ink-2) 0%, var(--color-ink-3) 50%, var(--color-ink-2) 100%) 0 0 / 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
