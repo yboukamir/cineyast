@@ -9,11 +9,11 @@ Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de 
 
 ![Page d'accueil de Cineyast : carrousel des tendances de la semaine](docs/capture-accueil.jpg)
 
-*Accueil — les tendances de la semaine dans un carrousel « pellicule », données réelles de l'API TMDB.*
+*Accueil du site en production — les tendances de la semaine dans un carrousel « pellicule », données réelles de l'API TMDB.*
 
 ![Fiche détaillée du film Fight Club : affiche, note, réalisation et bande-annonce](docs/capture-fiche.jpg)
 
-*Fiche film — note, classification française, casting, bande-annonce et recommandations.*
+*Fiche film en production — note, classification française, casting, bande-annonce et recommandations.*
 
 ## Stack
 
