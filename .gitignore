@@ -12,3 +12,6 @@ tmdb-config.php
 
 .DS_Store
 Thumbs.db
+
+# Configuration locale de l'agent / du serveur de dev
+.claude/
