@@ -1,5 +1,7 @@
 # Cineyast
 
+[![CI](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml/badge.svg)](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml)
+
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
 Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting et
 bande-annonce, recommandations, et une liste de favoris personnelle.
