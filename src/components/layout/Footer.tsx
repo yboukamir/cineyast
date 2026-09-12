@@ -29,20 +29,24 @@ export function Footer() {
 
         <div className="text-sm leading-relaxed text-mute md:text-right">
           <p className="marquee text-xs text-gold">Source des données</p>
-          {/* Mention d'attribution exigée par les conditions d'utilisation de l'API TMDB. */}
-          <p className="mt-3">Ce produit utilise l'API TMDB mais n'est pas approuvé ou certifié par TMDB.</p>
-          <p className="mt-1">
-            Données et images :{" "}
-            <a
-              href="https://www.themoviedb.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-bone underline decoration-gold/50 underline-offset-4 hover:text-gold"
-            >
-              The Movie Database (TMDB)
-            </a>
-            . Bandes-annonces : YouTube.
-          </p>
+          {/* Logo et mention d'attribution exigés par les conditions d'utilisation de l'API TMDB.
+              Le logo doit rester moins proéminent que celui du site. */}
+          <a
+            href="https://www.themoviedb.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-block transition-opacity hover:opacity-75"
+          >
+            <img
+              src="/tmdb-logo.svg"
+              alt="The Movie Database (TMDB)"
+              width={273}
+              height={36}
+              className="h-5 w-auto"
+            />
+          </a>
+          <p className="mt-4">Ce produit utilise l'API TMDB mais n'est pas approuvé ou certifié par TMDB.</p>
+          <p className="mt-1">Bandes-annonces hébergées par YouTube.</p>
           <p className="mt-6 text-xs">
             © {new Date().getFullYear()} Cineyast · Conçu et développé par Yassine Boukamir
           </p>
