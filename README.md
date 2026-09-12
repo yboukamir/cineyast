@@ -25,7 +25,7 @@ Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de 
 | Animations | Motion |
 | Polices | Bodoni Moda · Big Shoulders Display · Hanken Grotesk, auto-hébergées via Fontsource |
 | Build | Vite |
-| Production | Hébergement mutualisé LWS (Apache + PHP) |
+| Production | Vercel (fonction serverless pour le proxy TMDB) — [cineyast.com](https://cineyast.com) |
 
 ### Composants issus du catalogue 21st.dev
 
