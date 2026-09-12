@@ -29,6 +29,12 @@ const CACHE_DEGRADED = "public, max-age=0, s-maxage=60";
 
 const isReadAccessToken = (key) => key.startsWith("eyJ") && key.split(".").length === 3;
 
+/** Doivent rester identiques à backdropSrcSet() et posterSrcSet() dans src/lib/tmdb.ts. */
+const backdropSrcSet = (p) => `${IMG}/w780${p} 780w, ${IMG}/w1280${p} 1280w, ${IMG}/original${p} 1920w`;
+const posterSrcSet = (p) => `${IMG}/w185${p} 185w, ${IMG}/w342${p} 342w, ${IMG}/w500${p} 500w, ${IMG}/w780${p} 780w`;
+/** Doit rester identique à l'attribut sizes de l'affiche dans src/pages/MoviePage.tsx. */
+const POSTER_SIZES = "(min-width: 1024px) 336px, (min-width: 768px) 272px, 208px";
+
 const escapeHtml = (value) =>
   String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -90,6 +96,14 @@ export function injectMovieMeta(html, movie) {
     `<title>${escapeHtml(title)} — ${SITE}</title>`,
     `<meta name="description" content="${escapeHtml(description)}" />`,
     `<link rel="canonical" href="${escapeHtml(url)}" />`,
+    // Précharge l'image du haut de fiche, élément LCP : sans cela le navigateur ne la découvre
+    // qu'après le JavaScript, le code de la page et l'appel à TMDB. Les attributs reproduisent
+    // exactement le srcset/sizes de MoviePage, sinon l'image serait téléchargée deux fois.
+    ...(movie.backdrop_path
+      ? [`<link rel="preload" as="image" href="${escapeHtml(`${IMG}/w1280${movie.backdrop_path}`)}" imagesrcset="${escapeHtml(backdropSrcSet(movie.backdrop_path))}" imagesizes="100vw" fetchpriority="high" />`]
+      : movie.poster_path
+        ? [`<link rel="preload" as="image" href="${escapeHtml(`${IMG}/w342${movie.poster_path}`)}" imagesrcset="${escapeHtml(posterSrcSet(movie.poster_path))}" imagesizes="${POSTER_SIZES}" fetchpriority="high" />`]
+        : []),
     `<meta property="og:type" content="video.movie" />`,
     `<meta property="og:site_name" content="${SITE}" />`,
     `<meta property="og:locale" content="fr_FR" />`,
@@ -122,29 +136,28 @@ export default async function handler(req, res) {
   const slug = new URL(req.url, `https://${host}`).searchParams.get("slug") ?? "";
   const id = Number.parseInt(slug, 10);
 
-  let html;
-  try {
-    const response = await fetch(`https://${host}/index.html`, { signal: AbortSignal.timeout(4000) });
-    if (!response.ok) throw new Error(`index.html : HTTP ${response.status}`);
-    html = await response.text();
-  } catch {
+  const key = (process.env.TMDB_API_KEY ?? "").trim();
+  const wantsMovie = Number.isInteger(id) && id > 0 && Boolean(key);
+
+  // En parallèle : sur un cache CDN froid, attendre index.html puis TMDB doublait la latence.
+  const [shell, movie] = await Promise.allSettled([
+    fetch(`https://${host}/index.html`, { signal: AbortSignal.timeout(4000) }).then((response) => {
+      if (!response.ok) throw new Error(`index.html : HTTP ${response.status}`);
+      return response.text();
+    }),
+    wantsMovie ? fetchMovie(id, key) : Promise.resolve(null),
+  ]);
+
+  if (shell.status === "rejected") {
     // Sans le HTML de l'application, rien à servir : surtout ne pas mettre l'erreur en cache.
     res.setHeader("Cache-Control", "no-store");
     return res.status(502).send("Cineyast est momentanément indisponible. Réessayez dans un instant.");
   }
 
-  let body = html;
+  let body = shell.value;
   let cache = CACHE_OK;
-  const key = (process.env.TMDB_API_KEY ?? "").trim();
-
-  if (Number.isInteger(id) && id > 0 && key) {
-    try {
-      const movie = await fetchMovie(id, key);
-      if (movie?.title) body = injectMovieMeta(html, movie);
-    } catch {
-      cache = CACHE_DEGRADED;
-    }
-  }
+  if (movie.status === "rejected") cache = CACHE_DEGRADED;
+  else if (movie.value?.title) body = injectMovieMeta(body, movie.value);
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", cache);

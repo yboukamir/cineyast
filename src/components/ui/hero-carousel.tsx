@@ -70,13 +70,17 @@ export function HeroCarousel({
   const [current, setCurrent] = React.useState(defaultIndex);
   const [dragging, setDragging] = React.useState(false);
   const [paused, setPaused] = React.useState(false);
+  // Faux jusqu'à la première mesure de la scène : les transitions restent instantanées d'ici là.
+  const [ready, setReady] = React.useState(false);
   const reduced = useReducedMotion();
 
   const last = items.length - 1;
   const index = clamp(current, 0, Math.max(0, last));
   const go = React.useCallback((next: number) => setCurrent(clamp(next, 0, Math.max(0, last))), [last]);
 
-  React.useEffect(() => {
+  // Mesure AVANT le premier affichage (layout effect) : sinon la pellicule apparaissait avec une
+  // géométrie nulle puis s'animait vers sa vraie taille, coûteux en mise en page au chargement.
+  React.useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
     const read = () => setBox({ w: stage.clientWidth, h: stage.clientHeight });
@@ -100,13 +104,19 @@ export function HeroCarousel({
   const x = useMotionValue(0);
   const target = xFor(index);
 
-  const spring = reduced ? { duration: 0 } : { type: "spring" as const, stiffness: 260, damping: 34, mass: 0.9 };
+  const spring =
+    reduced || !ready ? { duration: 0 } : { type: "spring" as const, stiffness: 260, damping: 34, mass: 0.9 };
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (dragging) return;
     const run = animate(x, target, spring);
     return () => run.stop();
-  }, [target, dragging, reduced, x]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [target, dragging, reduced, ready, x]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Une fois la première mesure appliquée, on active les vraies transitions pour les changements de diapo.
+  React.useLayoutEffect(() => {
+    if (box.w > 0 && !ready) setReady(true);
+  }, [box.w, ready]);
 
   // Trackpad : uniquement les gestes horizontaux.
   React.useEffect(() => {

@@ -23,7 +23,9 @@ export function Layout() {
         </div>
       ) : null}
 
-      <main id="contenu" className="flex-1">
+      {/* Au moins un écran de haut : le pied de page démarre toujours sous la ligne de flottaison
+          et ne peut plus sauter quand le contenu d'une page arrive (CLS mesuré à 0,17 sur les fiches). */}
+      <main id="contenu" className="min-h-dvh flex-1">
         <Outlet />
       </main>
 

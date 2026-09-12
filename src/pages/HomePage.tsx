@@ -102,7 +102,8 @@ function LazyRow({ kind, ...props }: { kind: ListKind } & Omit<MovieRowProps, "q
   const query = useMovieList(kind, inView);
   return (
     <div ref={ref}>
-      <MovieRow query={query} {...props} />
+      {/* Hors de portée : une simple réserve de hauteur plutôt que huit squelettes animés par rangée. */}
+      {inView ? <MovieRow query={query} {...props} /> : <div aria-hidden className="h-[27rem] md:h-[30rem]" />}
     </div>
   );
 }

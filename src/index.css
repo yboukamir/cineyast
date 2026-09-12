@@ -38,8 +38,11 @@
 
   --animate-shimmer: shimmer 1.6s linear infinite;
   @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
     to {
-      background-position: -200% 0;
+      transform: translateX(100%);
     }
   }
 }
@@ -145,10 +148,21 @@
   }
 }
 
-/* Placeholder de chargement : reflet qui glisse, sans arrondi. */
+/* Placeholder de chargement : reflet qui glisse, sans arrondi.
+   Le reflet est un pseudo-élément déplacé par transform, animé par le compositeur : l'ancienne
+   version animait background-position et forçait à repeindre chaque carte à chaque image. */
 @utility skeleton {
-  background: linear-gradient(90deg, var(--color-ink-2) 0%, var(--color-ink-3) 50%, var(--color-ink-2) 100%) 0 0 / 200% 100%;
-  animation: var(--animate-shimmer);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-ink-2);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--color-ink-3), transparent);
+    transform: translateX(-100%);
+    animation: var(--animate-shimmer);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

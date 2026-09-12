@@ -26,7 +26,6 @@ export function Trailer({ video, title, className }: { video: Video; title: stri
         <button
           type="button"
           onClick={() => setPlaying(true)}
-          aria-label={`Lire la bande-annonce de ${title}`}
           className="group absolute inset-0"
         >
           <img
@@ -42,7 +41,11 @@ export function Trailer({ video, title, className }: { video: Video; title: stri
               <Play className="size-7 translate-x-0.5 fill-current" aria-hidden />
             </span>
           </span>
-          <span className="marquee absolute bottom-4 left-4 text-left text-xs text-bone/85">{video.name}</span>
+          {/* Le nom accessible reprend le texte visible (commande vocale : « cliquer sur … ») et le complète. */}
+          <span className="marquee absolute bottom-4 left-4 text-left text-xs text-bone/85">
+            <span className="sr-only">Lire la bande-annonce de {title} : </span>
+            {video.name}
+          </span>
         </button>
       )}
     </div>
