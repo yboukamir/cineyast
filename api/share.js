@@ -38,7 +38,7 @@ const posterSrcSet = (p) => `${IMG}/w185${p} 185w, ${IMG}/w342${p} 342w, ${IMG}/
 const POSTER_SIZES = "(min-width: 1024px) 336px, (min-width: 768px) 272px, 208px";
 
 /** Doit rester cohérent avec DEPARTMENTS dans src/lib/filmography.ts. */
-const DEPARTMENTS = {
+export const DEPARTMENTS = {
   Acting: "Interprétation",
   Directing: "Réalisation",
   Writing: "Scénario",
@@ -54,8 +54,8 @@ const DEPARTMENTS = {
 };
 
 /** Mêmes règles que buildFilmography() dans src/lib/filmography.ts. */
-const SELF = /^(self|himself|herself|themselves|lui-même|elle-même|eux-mêmes)\b/i;
-const CREATIVE_JOBS = new Set(["Director", "Screenplay", "Writer", "Story", "Original Story", "Novel", "Characters", "Author", "Producer"]);
+export const SELF = /^(self|himself|herself|themselves|lui-même|elle-même|eux-mêmes)\b/i;
+export const CREATIVE_JOBS = new Set(["Director", "Screenplay", "Writer", "Story", "Original Story", "Novel", "Characters", "Author", "Producer"]);
 
 const escapeHtml = (value) =>
   String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -162,7 +162,7 @@ export function injectMovieMeta(html, movie) {
 }
 
 /** Titres des films les plus votés, hors apparitions dans son propre rôle et postes non créatifs. */
-function knownForTitles(person, count) {
+export function knownForTitles(person, count) {
   const isSelf = (character) => {
     const role = character?.trim() ?? "";
     return SELF.test(role) || role.localeCompare(person.name, "fr", { sensitivity: "base" }) === 0;

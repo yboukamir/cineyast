@@ -36,7 +36,7 @@ const C = {
 };
 
 /** Doit rester cohérent avec DEPARTMENTS dans src/lib/filmography.ts. */
-const DEPARTMENTS = {
+export const DEPARTMENTS = {
   Acting: "Interprétation",
   Directing: "Réalisation",
   Writing: "Scénario",
@@ -52,8 +52,8 @@ const DEPARTMENTS = {
 };
 
 /** Mêmes règles que buildFilmography() dans src/lib/filmography.ts. */
-const SELF = /^(self|himself|herself|themselves|lui-même|elle-même|eux-mêmes)\b/i;
-const CREATIVE_JOBS = new Set(["Director", "Screenplay", "Writer", "Story", "Original Story", "Novel", "Characters", "Author", "Producer"]);
+export const SELF = /^(self|himself|herself|themselves|lui-même|elle-même|eux-mêmes)\b/i;
+export const CREATIVE_JOBS = new Set(["Director", "Screenplay", "Writer", "Story", "Original Story", "Novel", "Characters", "Author", "Producer"]);
 
 /**
  * Polices statiques en woff : Satori ne lit ni le woff2 ni les polices variables du site.
@@ -96,7 +96,7 @@ async function fetchPortrait(path) {
 }
 
 /** Titres des films les plus votés, hors apparitions dans son propre rôle et postes non créatifs. */
-function knownForTitles(person, count) {
+export function knownForTitles(person, count) {
   const isSelf = (character) => {
     const role = character?.trim() ?? "";
     return SELF.test(role) || role.localeCompare(person.name, "fr", { sensitivity: "base" }) === 0;

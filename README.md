@@ -94,12 +94,27 @@ serveur pour rester sous les limites de débit de TMDB.
 
 `.env`, `.env.deploy` et `tmdb-config.php` sont exclus par `.gitignore`.
 
-## 4. Build
+## 4. Build et tests
 
 ```bash
-npm run build     # vérification TypeScript + build optimisé dans dist/
-npm run preview   # sert dist/ avec les mêmes en-têtes de sécurité (CSP) que la prod
+npm run build        # vérification TypeScript + build optimisé dans dist/
+npm run preview      # sert dist/ avec les mêmes en-têtes de sécurité (CSP) que la prod
+npm test             # suite de tests Vitest, environ 2 secondes
+npm run test:watch   # relance les tests à chaque modification
+npm run fixtures     # réenregistre les données de test (TMDB_API_KEY requise)
 ```
+
+La CI (GitHub Actions) exécute la vérification TypeScript, les tests et le build à chaque push.
+
+- **Aucune donnée inventée** : les tests utilisent de vraies réponses TMDB enregistrées dans `tests/fixtures`
+  (liste, date et cas couverts dans son README). Aucun appel réseau pendant les tests : la CI n'a besoin d'aucune clé.
+- **Couverture** : balises de partage (dont un instantané des balises de Fight Club), carte générée (rendu PNG
+  réel et contraintes de Satori 0.29), filmographie (apparitions, postes non créatifs, tri), proxy TMDB (liste
+  blanche, clé ajoutée côté serveur), slugs, formatage français, offres de streaming.
+- **Concordance** : les règles recopiées entre le navigateur, les fonctions Vercel, le proxy de développement et
+  le proxy PHP sont comparées automatiquement (listes blanches, métiers, films les plus connus, URL canoniques).
+- **Vérifiée par mutation** : huit bugs rencontrés pendant le développement ont été réintroduits un par un, et
+  chacun fait échouer la suite.
 
 ## 5. Déploiement sur Vercel
 
@@ -211,6 +226,8 @@ server/              proxy TMDB de développement + CSP partagée
 public/              favicon, robots.txt
 deploy/php/          .htaccess + proxy PHP, pour un hébergement mutualisé
 vercel.json          réécritures (/api/tmdb.php, /film/:slug, /personne/:slug, repli SPA) et en-têtes de sécurité
+tests/               tests Vitest ; réponses TMDB réelles enregistrées dans tests/fixtures
+scripts/             déploiement FTP, enregistrement des données de test
 ```
 
 ## Pistes pour la v2

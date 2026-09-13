@@ -35,6 +35,10 @@ jobs:
       - name: Vérification TypeScript
         run: npm run typecheck
 
+      # Aucun appel réseau : les tests utilisent des réponses TMDB enregistrées (tests/fixtures).
+      - name: Tests automatisés
+        run: npm test
+
       - name: Build de production
         run: npm run build
 

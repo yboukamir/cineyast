@@ -14,7 +14,7 @@
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
-const ALLOWED_PATHS = [
+export const ALLOWED_PATHS = [
   /^\/trending\/movie\/(day|week)$/,
   /^\/movie\/(popular|top_rated|now_playing|upcoming)$/,
   /^\/movie\/\d{1,9}$/,
@@ -25,7 +25,7 @@ const ALLOWED_PATHS = [
   /^\/person\/\d{1,9}$/,
 ];
 
-const ALLOWED_PARAMS = new Set([
+export const ALLOWED_PARAMS = new Set([
   "language",
   "region",
   "page",

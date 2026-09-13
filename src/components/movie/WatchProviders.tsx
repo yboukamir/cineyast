@@ -1,43 +1,14 @@
 import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { releaseDateLong } from "@/lib/format";
-import type { WatchAvailability, WatchProvider } from "@/lib/tmdb";
+import type { WatchAvailability } from "@/lib/tmdb";
+import { buildGroups, type WatchGroup } from "@/lib/watchProviders";
 
 const LOGO = "https://image.tmdb.org/t/p/w92";
 /** Au-delà, les offres sont repliées : Fight Club en compte 9 en abonnement et 9 en location. */
 const VISIBLE = 6;
 
-interface Group {
-  key: string;
-  label: string;
-  providers: WatchProvider[];
-}
-
-const byPriority = (list: WatchProvider[]) => [...list].sort((a, b) => a.display_priority - b.display_priority);
-
-const sameProviders = (a: WatchProvider[] = [], b: WatchProvider[] = []) =>
-  a.length === b.length && a.every((p) => b.some((q) => q.provider_id === p.provider_id));
-
-function buildGroups(availability: WatchAvailability): Group[] {
-  const groups: Group[] = [];
-  const add = (key: string, label: string, list?: WatchProvider[]) => {
-    if (list?.length) groups.push({ key, label, providers: byPriority(list) });
-  };
-
-  add("flatrate", "Abonnement", availability.flatrate);
-  add("free", "Gratuit", availability.free);
-  add("ads", "Gratuit avec publicité", availability.ads);
-  // Les plateformes de location et d'achat sont très souvent les mêmes : un seul groupe évite le doublon.
-  if (availability.rent?.length && sameProviders(availability.rent, availability.buy)) {
-    add("rent-buy", "Location ou achat", availability.rent);
-  } else {
-    add("rent", "Location", availability.rent);
-    add("buy", "Achat", availability.buy);
-  }
-  return groups;
-}
-
-function ProviderGroup({ group }: { group: Group }) {
+function ProviderGroup({ group }: { group: WatchGroup }) {
   const [expanded, setExpanded] = useState(false);
   const hidden = group.providers.length - VISIBLE;
   const shown = expanded || hidden <= 0 ? group.providers : group.providers.slice(0, VISIBLE);
