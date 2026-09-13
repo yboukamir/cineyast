@@ -18,6 +18,8 @@ const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p";
 const SITE = "Cineyast";
 const CANONICAL_ORIGIN = "https://cineyast.com";
+/** À incrémenter quand le dessin de la carte change : force LinkedIn et consorts à retélécharger l'image. */
+const OG_VERSION = 1;
 
 /** Seuls les domaines du projet peuvent servir de source pour index.html. */
 const ALLOWED_HOST = /^(?:www\.)?cineyast\.com$|^[a-z0-9-]+\.vercel\.app$/i;
@@ -187,9 +189,9 @@ export function injectPersonMeta(html, person) {
   const slug = slugify(person.name);
   const url = `${CANONICAL_ORIGIN}/personne/${person.id}${slug ? `-${slug}` : ""}`;
 
-  // Portrait (h632, ~421×632) : LinkedIn l'affiche en vignette et non en grande carte,
-  // mais c'est l'image qui identifie la personne, là où l'image d'un film tromperait.
-  const image = person.profile_path ? { src: `${IMG}/h632${person.profile_path}`, width: 421, height: 632 } : null;
+  // Carte 1200×630 générée par api/og/personne.js. Un portrait brut était recadré au centre
+  // par LinkedIn en grande carte paysage, ce qui coupait le visage (constaté dans Post Inspector).
+  const image = { src: `${CANONICAL_ORIGIN}/api/og/personne?id=${person.id}&v=${OG_VERSION}`, width: 1200, height: 630 };
 
   return withTags(html, [
     `<title>${escapeHtml(person.name)} — ${SITE}</title>`,
@@ -206,10 +208,10 @@ export function injectPersonMeta(html, person) {
           `<meta property="og:image" content="${escapeHtml(image.src)}" />`,
           `<meta property="og:image:width" content="${image.width}" />`,
           `<meta property="og:image:height" content="${image.height}" />`,
-          `<meta property="og:image:alt" content="${escapeHtml(`Portrait de ${person.name}`)}" />`,
+          `<meta property="og:image:alt" content="${escapeHtml(`${person.name} sur ${SITE} : métier et films les plus connus`)}" />`,
         ]
       : []),
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
   ]);
 }
 

@@ -1,6 +1,7 @@
 # Fins de ligne normalisées en LF dans le dépôt et dans la copie de travail :
 # le site est déployé sur un serveur Linux.
 * text=auto eol=lf
+*.woff binary
 *.woff2 binary
 *.png binary
 *.jpg binary

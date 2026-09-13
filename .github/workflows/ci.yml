@@ -40,7 +40,7 @@ jobs:
 
       # api/ et scripts/ sont en JavaScript pur : TypeScript ne les vérifie pas.
       - name: Syntaxe des fonctions serverless et des scripts
-        run: for f in api/*.js scripts/*.mjs; do node --check "$f"; done
+        run: for f in api/*.js api/og/*.js scripts/*.mjs; do node --check "$f"; done
 
       # Un vercel.json invalide ferait échouer le déploiement, pas le build.
       - name: Validité de vercel.json

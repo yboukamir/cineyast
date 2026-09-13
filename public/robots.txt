@@ -1,3 +1,6 @@
 User-agent: *
 Allow: /
+# Images de partage générées : les robots des réseaux (LinkedInBot…) doivent pouvoir les télécharger.
+# La règle la plus précise l'emporte sur « Disallow: /api/ ».
+Allow: /api/og/
 Disallow: /api/

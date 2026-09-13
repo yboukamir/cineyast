@@ -158,8 +158,17 @@ paysage (1280×720), URL canonique sur `cineyast.com`, Open Graph et Twitter. Le
 même application React ; la réponse est mise en cache une heure sur le CDN.
 
 Pour une personne : nom, biographie tronquée à 200 caractères (à défaut, métier et films les plus connus),
-portrait, URL canonique. LinkedIn affiche un portrait en vignette plutôt qu'en grande carte, mais c'est l'image
-qui identifie la personne.
+URL canonique, et une **carte 1200×630 générée** par `api/og/personne.js` : portrait entier, métier, nom et
+films les plus connus. Un portrait brut ne convenait pas : LinkedIn recadre au centre les images portrait en
+grande carte paysage, ce qui coupait le visage.
+
+- La carte utilise `@vercel/og` **épinglé en 1.0.1** : la 1.0.2 ne fonctionne pas dans un projet ESM
+  (`require` dynamique) et embarque une dépendance vulnérable.
+- Polices statiques en woff dans `api/og/_fonts` (le moteur ne lit pas le woff2), incluses dans la fonction
+  via `vercel.json`.
+- `public/robots.txt` autorise `/api/og/` : sans cela, le robot de LinkedIn refuserait de télécharger l'image.
+- Seul l'identifiant est lu dans l'URL de la carte ; nom et films viennent de TMDB, pour qu'on ne puisse pas
+  fabriquer de fausse carte au nom du site.
 
 Si l'identifiant est inconnu ou si TMDB ne répond pas, la page d'origine est servie telle quelle.
 
@@ -197,6 +206,7 @@ src/
 └── pages/           Accueil, Explorer, Fiche film, Fiche personne, Favoris, 404
 api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
 api/share.js         balises de partage des fiches films et des pages personnes (Vercel)
+api/og/personne.js   carte de partage 1200×630 des pages personnes, polices dans api/og/_fonts (Vercel)
 server/              proxy TMDB de développement + CSP partagée
 public/              favicon, robots.txt
 deploy/php/          .htaccess + proxy PHP, pour un hébergement mutualisé
