@@ -50,6 +50,16 @@ describe("relais vers TMDB", () => {
     expect(url.searchParams.getAll("include_adult")).toEqual(["false"]);
   });
 
+  it("transmet les filtres des rangées Flashback et Cinéma belge", async () => {
+    const captured = stubTmdb();
+    await call("path=%2Fdiscover%2Fmovie&release_date.gte=2001-09-12&release_date.lte=2001-09-18&with_release_type=2%7C3&with_origin_country=BE");
+    const { searchParams } = captured[0].url;
+    expect(searchParams.get("release_date.gte")).toBe("2001-09-12");
+    expect(searchParams.get("release_date.lte")).toBe("2001-09-18");
+    expect(searchParams.get("with_release_type")).toBe("2|3");
+    expect(searchParams.get("with_origin_country")).toBe("BE");
+  });
+
   it("utilise l'en-tête Authorization avec un jeton d'accès v4", async () => {
     vi.stubEnv("TMDB_API_KEY", "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.signature");
     const captured = stubTmdb();

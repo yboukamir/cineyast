@@ -1,14 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode, type Ref } from "react";
 import { Link } from "react-router";
 import { Heart } from "lucide-react";
 import { HeroCarousel, type HeroCarouselItem } from "@/components/ui/hero-carousel";
 import { TicketButton, TicketLink } from "@/components/ui/ticket-button";
 import { MovieRow, type MovieRowProps } from "@/components/movie/MovieRow";
 import { ErrorState } from "@/components/States";
-import { useGenres, useMovieList, useTrending, type ListKind } from "@/hooks/queries";
+import { useBelgianCinema, useFlashback, useGenres, useMovieList, useTrending, type ListKind } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useInView } from "@/hooks/useInView";
+import { FLASHBACK_YEARS, flashbackTitle, flashbackWeek } from "@/lib/flashback";
 import { releaseYear, score } from "@/lib/format";
 import { movieHref } from "@/lib/slug";
 import { backdropSrcSet, backdropUrl, posterUrl, type MovieSummary } from "@/lib/tmdb";
@@ -74,7 +75,9 @@ export default function HomePage() {
         <LazyRow kind="now_playing" eyebrow="Au cinéma" title="À l'affiche en France" />
         <LazyRow kind="popular" eyebrow="Le public en parle" title="Les plus populaires" moreHref="/explorer" />
         <LazyRow kind="top_rated" eyebrow="Panthéon" title="Les mieux notés" moreHref="/explorer?tri=note" />
+        <FlashbackRow />
         <LazyRow kind="upcoming" eyebrow="Bientôt en salle" title="Prochainement" />
+        <BelgianRow />
       </div>
     </>
   );
@@ -101,11 +104,40 @@ function LazyRow({ kind, ...props }: { kind: ListKind } & Omit<MovieRowProps, "q
   const [ref, inView] = useInView<HTMLDivElement>();
   const query = useMovieList(kind, inView);
   return (
-    <div ref={ref}>
-      {/* Hors de portée : une simple réserve de hauteur plutôt que huit squelettes animés par rangée. */}
-      {inView ? <MovieRow query={query} {...props} /> : <div aria-hidden className="h-[27rem] md:h-[30rem]" />}
-    </div>
+    <RowSlot slotRef={ref} inView={inView}>
+      <MovieRow query={query} {...props} />
+    </RowSlot>
   );
+}
+
+/** Films sortis en salle en France il y a 25 ans, cette semaine-là (ou ce mois-là si la semaine est maigre). */
+function FlashbackRow() {
+  const [ref, inView] = useInView<HTMLDivElement>();
+  const query = useFlashback(inView);
+  if (query.data && !query.data.results.length) return null;
+
+  const period = query.data?.period ?? flashbackWeek(new Date());
+  return (
+    <RowSlot slotRef={ref} inView={inView}>
+      <MovieRow eyebrow={`Flashback · il y a ${FLASHBACK_YEARS} ans`} title={flashbackTitle(period)} query={query} />
+    </RowSlot>
+  );
+}
+
+function BelgianRow() {
+  const [ref, inView] = useInView<HTMLDivElement>();
+  const query = useBelgianCinema(inView);
+  return (
+    <RowSlot slotRef={ref} inView={inView}>
+      {/* « et coproductions » : le filtre de TMDB retient tout film dont la Belgique est un des pays d'origine. */}
+      <MovieRow eyebrow="Plat pays" title="Films belges et coproductions" query={query} />
+    </RowSlot>
+  );
+}
+
+/** Hors de portée : une simple réserve de hauteur plutôt que huit squelettes animés par rangée. */
+function RowSlot({ slotRef, inView, children }: { slotRef: Ref<HTMLDivElement>; inView: boolean; children: ReactNode }) {
+  return <div ref={slotRef}>{inView ? children : <div aria-hidden className="h-[27rem] md:h-[30rem]" />}</div>;
 }
 
 function GenreBand() {

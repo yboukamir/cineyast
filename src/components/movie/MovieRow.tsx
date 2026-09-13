@@ -4,14 +4,15 @@ import { ArrowRight } from "lucide-react";
 import { Scroller } from "@/components/ui/scroller";
 import { MovieCard } from "@/components/movie/MovieCard";
 import { ErrorState, PosterSkeleton } from "@/components/States";
-import { TmdbError, type MovieSummary, type Paginated } from "@/lib/tmdb";
+import { TmdbError, type MovieSummary } from "@/lib/tmdb";
 
 const ITEM = "w-[40vw] max-w-52 shrink-0 snap-start sm:w-44 md:w-48 lg:w-52";
 const SIZES = "(min-width: 1024px) 208px, (min-width: 768px) 192px, (min-width: 640px) 176px, 40vw";
 
 /** Sous-ensemble d'un résultat TanStack Query ; permet aussi de passer des données déjà chargées. */
 export interface RowSource {
-  data?: Paginated<MovieSummary>;
+  /** Une page TMDB convient, comme toute liste déjà filtrée. */
+  data?: { results: MovieSummary[] };
   isPending: boolean;
   isError: boolean;
   error: unknown;

@@ -5,7 +5,8 @@
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
 Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting,
 bande-annonce et offres de streaming en France, pages acteurs et réalisateurs avec leur filmographie,
-recommandations, et une liste de favoris personnelle.
+recommandations, et une liste de favoris personnelle. Sur l'accueil, une rangée « Flashback » montre les films
+sortis en salle en France la même semaine il y a 25 ans, et une autre les films belges et coproductions.
 
 Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de l'API publique
 [TMDB](https://www.themoviedb.org/) — aucune donnée de film n'est codée en dur.
@@ -218,6 +219,7 @@ src/
 ├── hooks/           requêtes TMDB, favoris (localStorage), utilitaires
 ├── lib/             client TMDB typé, formatage FR, slugs
 ├── lib/filmography.ts  regroupement des crédits (réalisation, rôles, scénario, production, apparitions)
+├── lib/flashback.ts    période de la rangée Flashback (semaine de sortie du mercredi au mardi, repli sur le mois)
 └── pages/           Accueil, Explorer, Fiche film, Fiche personne, Favoris, 404
 api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
 api/share.js         balises de partage des fiches films et des pages personnes (Vercel)

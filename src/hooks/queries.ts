@@ -23,6 +23,16 @@ export type ListKind = "popular" | "top_rated" | "now_playing" | "upcoming";
 export const useMovieList = (kind: ListKind, enabled = true) =>
   useQuery({ queryKey: ["list", kind], queryFn: ({ signal }) => api.list(kind, signal), enabled });
 
+/** Clé datée du jour : la période change à minuit, même si l'onglet reste ouvert. */
+export const useFlashback = (enabled = true) => {
+  const now = new Date();
+  const day = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  return useQuery({ queryKey: ["flashback", day], queryFn: ({ signal }) => api.flashback(now, signal), enabled });
+};
+
+export const useBelgianCinema = (enabled = true) =>
+  useQuery({ queryKey: ["belgian-cinema"], queryFn: ({ signal }) => api.belgianCinema(signal), enabled });
+
 export const useGenres = () =>
   useQuery({
     queryKey: ["genres"],

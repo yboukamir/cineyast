@@ -140,7 +140,7 @@ function PersonView({ person }: { person: PersonDetail }) {
             eyebrow="Filmographie"
             title="Les plus connus"
             query={{
-              data: { page: 1, results: knownFor, total_pages: 1, total_results: knownFor.length },
+              data: { results: knownFor },
               isPending: false,
               isError: false,
               error: null,

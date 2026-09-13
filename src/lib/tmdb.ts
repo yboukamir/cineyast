@@ -4,6 +4,8 @@
  * Aucune clé n'est donc présente dans ce code ni dans le bundle.
  */
 
+import { firstReleasesIn, flashbackMonth, flashbackWeek, MIN_FLASHBACK_MOVIES, type ReleaseWindow } from "@/lib/flashback";
+
 // ─── Types (sous-ensemble des réponses TMDB réellement utilisé) ─────────────
 
 export interface MovieSummary {
@@ -236,7 +238,53 @@ export const api = {
       signal,
     );
   },
+
+  /** Rangée Flashback : la semaine d'il y a 25 ans, ou tout le mois si la semaine est trop maigre. */
+  flashback: async (now: Date, signal?: AbortSignal): Promise<FlashbackResult> => {
+    const week = flashbackWeek(now);
+    const movies = await releasedInFrance(week, signal);
+    if (movies.length >= MIN_FLASHBACK_MOVIES) return { period: week, results: movies };
+    const month = flashbackMonth(now);
+    return { period: month, results: await releasedInFrance(month, signal) };
+  },
+
+  /** Films dont la Belgique est un pays d'origine, coproductions comprises (d'où l'intitulé de la rangée). */
+  belgianCinema: (signal?: AbortSignal) =>
+    tmdb<Paginated<MovieSummary>>(
+      "/discover/movie",
+      {
+        sort_by: "popularity.desc",
+        with_origin_country: "BE",
+        // Au moins 50 votes : des films que le public a déjà pu voir.
+        "vote_count.gte": 50,
+        "primary_release_date.lte": today(),
+      },
+      signal,
+    ),
 };
+
+export interface FlashbackResult {
+  period: ReleaseWindow;
+  results: MovieSummary[];
+}
+
+/** Premières sorties en salle en France sur la période, les plus connues d'abord. */
+async function releasedInFrance(period: ReleaseWindow, signal?: AbortSignal) {
+  const page = await tmdb<Paginated<MovieSummary>>(
+    "/discover/movie",
+    {
+      sort_by: "vote_count.desc",
+      // Avec region, ces bornes portent sur la sortie en France, pas sur la première sortie mondiale.
+      region: REGION,
+      "release_date.gte": period.from,
+      "release_date.lte": period.to,
+      // 2 = sortie limitée, 3 = sortie en salle : ni festival, ni vidéo, ni télévision.
+      with_release_type: "2|3",
+    },
+    signal,
+  );
+  return firstReleasesIn(page.results, period);
+}
 
 function today() {
   return new Date().toISOString().slice(0, 10);
