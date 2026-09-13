@@ -7,7 +7,11 @@
     },
     {
       "source": "/film/:slug",
-      "destination": "/api/film?slug=:slug"
+      "destination": "/api/share?type=film&slug=:slug"
+    },
+    {
+      "source": "/personne/:slug",
+      "destination": "/api/share?type=personne&slug=:slug"
     },
     {
       "source": "/:chemin((?!api/).*)",

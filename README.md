@@ -147,17 +147,21 @@ Arborescence attendue sur l'hébergement :
 4. Tester `/api/tmdb.php?path=/genre/movie/list`.
 5. Une fois le HTTPS actif, décommenter les 3 lignes « HTTPS forcé » de `deploy/php/.htaccess` et redéployer.
 
-## 7. Aperçus de partage des fiches films
+## 7. Aperçus de partage des fiches films et des pages personnes
 
 Les robots de LinkedIn, WhatsApp ou Slack n'exécutent pas JavaScript : sans traitement, chaque fiche film
 partagée affichait l'aperçu générique de la page d'accueil.
 
-`vercel.json` réécrit donc `/film/:slug` vers la fonction `api/film.js`, qui lit l'`index.html` du
-déploiement et y injecte les balises du film : titre et année, synopsis tronqué à 200 caractères, image
+`vercel.json` réécrit donc `/film/:slug` et `/personne/:slug` vers la fonction `api/share.js`, qui lit l'`index.html` du
+déploiement et y injecte les balises de la page. Pour un film : titre et année, synopsis tronqué à 200 caractères, image
 paysage (1280×720), URL canonique sur `cineyast.com`, Open Graph et Twitter. Les visiteurs reçoivent la
 même application React ; la réponse est mise en cache une heure sur le CDN.
 
-Si le film est inconnu ou si TMDB ne répond pas, la page d'origine est servie telle quelle.
+Pour une personne : nom, biographie tronquée à 200 caractères (à défaut, métier et films les plus connus),
+portrait, URL canonique. LinkedIn affiche un portrait en vignette plutôt qu'en grande carte, mais c'est l'image
+qui identifie la personne.
+
+Si l'identifiant est inconnu ou si TMDB ne répond pas, la page d'origine est servie telle quelle.
 
 - **Tester un aperçu** : <https://www.linkedin.com/post-inspector/> avec l'URL de la fiche. Relancer
   l'inspection force aussi LinkedIn à rafraîchir son cache.
@@ -192,14 +196,13 @@ src/
 ├── lib/filmography.ts  regroupement des crédits (réalisation, rôles, scénario, production, apparitions)
 └── pages/           Accueil, Explorer, Fiche film, Fiche personne, Favoris, 404
 api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
-api/film.js          balises de partage propres à chaque fiche film (Vercel)
+api/share.js         balises de partage des fiches films et des pages personnes (Vercel)
 server/              proxy TMDB de développement + CSP partagée
 public/              favicon, robots.txt
 deploy/php/          .htaccess + proxy PHP, pour un hébergement mutualisé
-vercel.json          réécritures (/api/tmdb.php, /film/:slug, repli SPA) et en-têtes de sécurité
+vercel.json          réécritures (/api/tmdb.php, /film/:slug, /personne/:slug, repli SPA) et en-têtes de sécurité
 ```
 
 ## Pistes pour la v2
 
-- Aperçus de partage propres aux pages personnes (comme `api/film.js` pour les fiches films)
 - Pré-rendu du contenu complet des fiches pour le référencement (les balises de partage sont déjà servies)
