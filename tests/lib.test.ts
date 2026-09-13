@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { count, releaseDateLong, releaseYear, runtime, score } from "@/lib/format";
 import { movieHref, parseId, personHref, slugify } from "@/lib/slug";
-import { directorsOf, frenchCertification, frenchWatchProviders, pickTrailer, type MovieDetail } from "@/lib/tmdb";
+import { api, directorsOf, frenchCertification, frenchWatchProviders, pickTrailer, type MovieDetail } from "@/lib/tmdb";
 import { buildGroups } from "@/lib/watchProviders";
 import { fixture } from "./helpers";
 
@@ -75,6 +75,39 @@ describe("extraction depuis une fiche TMDB (Fight Club)", () => {
 
   it("liste les réalisateurs sans doublon", () => {
     expect(directorsOf(movie)).toEqual([{ id: 7467, name: "David Fincher" }]);
+  });
+});
+
+describe("rangées de listes TMDB", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  // Forme de la réponse /movie/upcoming?region=FR du 13/09/2026, réduite à trois films.
+  const response = () =>
+    new Response(
+      JSON.stringify({
+        dates: { minimum: "2026-09-16", maximum: "2026-10-07" },
+        page: 1,
+        total_pages: 4,
+        total_results: 70,
+        results: [
+          { id: 299534, title: "Avengers : Endgame", release_date: "2019-04-24" },
+          { id: 1, title: "Sortie du 16", release_date: "2026-09-16" },
+          { id: 2, title: "Sortie du 7", release_date: "2026-10-07" },
+        ],
+      }),
+      { status: 200 },
+    );
+
+  it("Prochainement : écarte les reprises datées d'avant la période annoncée", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response()));
+    const page = await api.list("upcoming");
+    expect(page.results.map((m) => m.id)).toEqual([1, 2]);
+  });
+
+  it("les autres listes ne sont pas filtrées : une reprise à l'affiche est bien à l'affiche", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response()));
+    const page = await api.list("now_playing");
+    expect(page.results.map((m) => m.id)).toEqual([299534, 1, 2]);
   });
 });
 

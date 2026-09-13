@@ -196,8 +196,19 @@ export const api = {
   trending: (window: "day" | "week", signal?: AbortSignal) =>
     tmdb<Paginated<MovieSummary>>(`/trending/movie/${window}`, {}, signal),
 
-  list: (kind: "popular" | "top_rated" | "now_playing" | "upcoming", signal?: AbortSignal) =>
-    tmdb<Paginated<MovieSummary>>(`/movie/${kind}`, { region: REGION }, signal),
+  list: async (kind: "popular" | "top_rated" | "now_playing" | "upcoming", signal?: AbortSignal) => {
+    const page = await tmdb<Paginated<MovieSummary> & { dates?: { minimum: string; maximum: string } }>(
+      `/movie/${kind}`,
+      { region: REGION },
+      signal,
+    );
+    // Les reprises en salle se glissent dans les films à venir avec leur date de première sortie
+    // (Avengers : Endgame, ressorti en France le 23/09/2026, y figurait daté de 2019) :
+    // on écarte ce qui tombe avant la période annoncée par TMDB.
+    if (kind !== "upcoming" || !page.dates) return page;
+    const from = page.dates.minimum;
+    return { ...page, results: page.results.filter((movie) => Boolean(movie.release_date) && movie.release_date! >= from) };
+  },
 
   genres: (signal?: AbortSignal) => tmdb<{ genres: Genre[] }>("/genre/movie/list", {}, signal),
 
