@@ -3,8 +3,8 @@
 [![CI](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml/badge.svg)](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml)
 
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
-Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting et
-bande-annonce, recommandations, et une liste de favoris personnelle.
+Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting,
+bande-annonce et offres de streaming en France, recommandations, et une liste de favoris personnelle.
 
 Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de l'API publique
 [TMDB](https://www.themoviedb.org/) — aucune donnée de film n'est codée en dur.
@@ -172,13 +172,18 @@ Le pied de page affiche les deux éléments exigés par les conditions d'utilisa
   <https://www.themoviedb.org/about/logos-attribution>), lié à themoviedb.org et moins proéminent que le
   logotype Cineyast. Il est servi depuis le domaine, la CSP n'autorisant que les images locales et TMDB.
 
+La section **« Où regarder »** des fiches films affiche les offres en France (abonnement, location, achat),
+issues de l'endpoint `watch/providers` de TMDB, lui-même alimenté par JustWatch. TMDB exige d'attribuer ces
+données à JustWatch : la mention « Disponibilités fournies par JustWatch », avec un lien, figure sous les offres.
+Elles arrivent dans la même requête que la fiche (`append_to_response`), sans appel réseau supplémentaire.
+
 ## Structure
 
 ```
 src/
 ├── components/
 │   ├── ui/          composants 21st.dev adaptés (hero, rating, ticket, chips, scroller…)
-│   ├── movie/       carte, affiche, rangée, grille, bande-annonce, bouton favori
+│   ├── movie/       carte, affiche, rangée, grille, bande-annonce, offres de streaming, bouton favori
 │   ├── explore/     panneau de filtres
 │   └── layout/      en-tête, pied de page, logo, page d'erreur
 ├── hooks/           requêtes TMDB, favoris (localStorage), utilitaires
@@ -194,7 +199,5 @@ vercel.json          réécritures (/api/tmdb.php, /film/:slug, repli SPA) et en
 
 ## Pistes pour la v2
 
-- Plateformes de streaming en France (`/movie/{id}/watch/providers`, attribution JustWatch requise)
 - Pages acteurs et réalisateurs (filmographies)
-- Intégration continue (GitHub Actions : vérification TypeScript et build à chaque push)
 - Pré-rendu du contenu complet des fiches pour le référencement (les balises de partage sont déjà servies)

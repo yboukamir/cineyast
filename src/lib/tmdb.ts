@@ -57,6 +57,24 @@ export interface Video {
   iso_639_1: string;
 }
 
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+  display_priority: number;
+}
+
+/** Offres dans un pays. Données JustWatch : leur attribution est obligatoire à l'affichage. */
+export interface WatchAvailability {
+  /** Page TMDB qui liste les offres avec un lien vers chacune. */
+  link?: string;
+  flatrate?: WatchProvider[];
+  free?: WatchProvider[];
+  ads?: WatchProvider[];
+  rent?: WatchProvider[];
+  buy?: WatchProvider[];
+}
+
 interface ReleaseDatesByCountry {
   iso_3166_1: string;
   release_dates: { certification: string; type: number; release_date: string }[];
@@ -73,6 +91,7 @@ export interface MovieDetail extends Omit<MovieSummary, "genre_ids"> {
   videos: { results: Video[] };
   recommendations: Paginated<MovieSummary>;
   release_dates: { results: ReleaseDatesByCountry[] };
+  "watch/providers"?: { results: Partial<Record<string, WatchAvailability>> };
 }
 
 // ─── Requêtes ────────────────────────────────────────────────────────────────
@@ -157,7 +176,8 @@ export const api = {
     tmdb<MovieDetail>(
       `/movie/${id}`,
       {
-        append_to_response: "credits,videos,recommendations,release_dates",
+        // watch/providers dans la même requête : aucun appel réseau supplémentaire pour « Où regarder ».
+        append_to_response: "credits,videos,recommendations,release_dates,watch/providers",
         // Sans ce paramètre, language=fr-FR ne renvoie que les vidéos françaises.
         include_video_language: "fr,en,null",
       },
@@ -238,3 +258,7 @@ export function frenchCertification(movie: MovieDetail): string | undefined {
 
 export const directors = (movie: MovieDetail) =>
   movie.credits.crew.filter((c) => c.job === "Director").map((c) => c.name);
+
+/** Offres en France, ou undefined si JustWatch n'en référence aucune. */
+export const frenchWatchProviders = (movie: MovieDetail): WatchAvailability | undefined =>
+  movie["watch/providers"]?.results[REGION];

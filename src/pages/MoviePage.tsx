@@ -4,6 +4,7 @@ import { ExternalLink, Heart, Play, UserRound } from "lucide-react";
 import { MovieRow } from "@/components/movie/MovieRow";
 import { Poster } from "@/components/movie/Poster";
 import { Trailer } from "@/components/movie/Trailer";
+import { WatchProviders } from "@/components/movie/WatchProviders";
 import { EmptyState, ErrorState } from "@/components/States";
 import { Rating } from "@/components/ui/rating";
 import { Scroller } from "@/components/ui/scroller";
@@ -18,6 +19,7 @@ import {
   backdropUrl,
   directors,
   frenchCertification,
+  frenchWatchProviders,
   pickTrailer,
   profileUrl,
   TmdbError,
@@ -187,6 +189,14 @@ function MovieView({ movie }: { movie: MovieDetail }) {
               ) : (
                 <p className="mt-5 text-mute italic">Aucun synopsis n'est disponible en français pour ce film.</p>
               )}
+            </section>
+
+            {/* Juste après le synopsis : sur mobile, le bloc latéral passe tout en bas de la page. */}
+            <section aria-labelledby="ou-regarder">
+              <SectionTitle id="ou-regarder" eyebrow="En France">
+                Où regarder
+              </SectionTitle>
+              <WatchProviders availability={frenchWatchProviders(movie)} releaseDate={movie.release_date} />
             </section>
 
             {trailer ? (
