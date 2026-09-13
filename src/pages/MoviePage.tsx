@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { ChevronLeft, Play } from "lucide-react";
+import { LiensExternes } from "@/components/LiensExternes";
 import { FavoriteButton } from "@/components/movie/FavoriteButton";
 import { MovieRow } from "@/components/movie/MovieRow";
 import { NoteTuiles } from "@/components/movie/NoteTuiles";
@@ -270,6 +271,15 @@ function MovieView({ movie }: { movie: MovieDetail }) {
             Fiche technique
           </SectionHead>
           <TechnicalSheet movie={movie} directors={directorList} certification={certification} />
+          {/* Même bloc que sur la page personne de la maquette : validé par Yassine pour la fiche film. */}
+          <LiensExternes
+            titreId="liens-film"
+            className="pt-10"
+            liens={[
+              ...(movie.imdb_id ? [{ href: `https://www.imdb.com/title/${encodeURIComponent(movie.imdb_id)}/`, label: "Fiche IMDb" }] : []),
+              { href: `https://www.themoviedb.org/movie/${movie.id}`, label: "Fiche TMDB" },
+            ]}
+          />
         </aside>
       </div>
 

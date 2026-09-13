@@ -54,6 +54,12 @@ export function Footer() {
           <p className="mt-4 text-sm text-creme/90">Bandes-annonces hébergées par YouTube.</p>
         </div>
       </div>
+      {/* Hors maquette, validé par Yassine : Cineyast est un projet de portfolio, son auteur doit être nommé. */}
+      <div className="mx-auto max-w-page px-gouttiere md:px-gouttiere-lg">
+        <p className="border-t-2 border-gris py-5 text-sm text-creme/80">
+          © {new Date().getFullYear()} Cineyast · Conçu et développé par Yassine Boukamir
+        </p>
+      </div>
     </footer>
   );
 }

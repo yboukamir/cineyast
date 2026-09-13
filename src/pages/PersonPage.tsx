@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { ExternalLink } from "lucide-react";
+import { LiensExternes } from "@/components/LiensExternes";
 import { MovieRow } from "@/components/movie/MovieRow";
 import { EmptyState, ErrorState } from "@/components/States";
 import { usePerson, usePersonBiography } from "@/hooks/queries";
@@ -144,19 +145,16 @@ function PersonView({ person }: { person: PersonDetail }) {
           <Biography text={person.biography} personId={person.id} tmdbUrl={tmdbUrl} />
         </section>
 
-        <aside className="pt-10 md:pt-14" aria-labelledby="liens-titre">
-          <p className="surtitre mb-1">Ailleurs</p>
-          <h2 id="liens-titre" className="titre-section">
-            Liens
-          </h2>
-          <ul className="m-0 mt-4 list-none border-t-[3px] border-noir p-0">
-            {person.external_ids?.imdb_id ? (
-              <LienExterne href={`https://www.imdb.com/name/${encodeURIComponent(person.external_ids.imdb_id)}/`}>
-                Fiche IMDb
-              </LienExterne>
-            ) : null}
-            <LienExterne href={tmdbUrl}>Fiche TMDB</LienExterne>
-          </ul>
+        <aside className="pt-10 md:pt-14">
+          <LiensExternes
+            titreId="liens-titre"
+            liens={[
+              ...(person.external_ids?.imdb_id
+                ? [{ href: `https://www.imdb.com/name/${encodeURIComponent(person.external_ids.imdb_id)}/`, label: "Fiche IMDb" }]
+                : []),
+              { href: tmdbUrl, label: "Fiche TMDB" },
+            ]}
+          />
         </aside>
       </div>
 
@@ -192,25 +190,6 @@ function PersonView({ person }: { person: PersonDetail }) {
         </div>
       )}
     </article>
-  );
-}
-
-function LienExterne({ href, children }: { href: string; children: string }) {
-  return (
-    <li className="border-b-2 border-filet">
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="-mx-2 flex h-14 items-center justify-between px-2 font-semibold hover:bg-jaune"
-      >
-        <span>
-          {children}
-          <span className="sr-only"> (nouvel onglet)</span>
-        </span>
-        <ExternalLink className="size-4" strokeWidth={2.4} aria-hidden />
-      </a>
-    </li>
   );
 }
 
