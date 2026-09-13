@@ -13,16 +13,17 @@ import { useMovie } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useFavorites } from "@/hooks/useFavorites";
 import { count, releaseDateLong, releaseYear, runtime, score } from "@/lib/format";
-import { movieHref, parseMovieId } from "@/lib/slug";
+import { movieHref, parseId, personHref } from "@/lib/slug";
 import {
   backdropSrcSet,
   backdropUrl,
-  directors,
+  directorsOf,
   frenchCertification,
   frenchWatchProviders,
   pickTrailer,
   profileUrl,
   TmdbError,
+  type CrewMember,
   type MovieDetail,
 } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,7 @@ const BACKDROP_HEIGHT = "h-[46svh] min-h-72 md:h-[72svh] md:max-h-[46rem]";
 
 export default function MoviePage() {
   const { id: param } = useParams();
-  const id = parseMovieId(param);
+  const id = parseId(param);
   const { data: movie, isPending, isError, error, refetch } = useMovie(id);
 
   const year = releaseYear(movie?.release_date);
@@ -63,7 +64,7 @@ function MovieView({ movie }: { movie: MovieDetail }) {
 
   const favorite = isFavorite(movie.id);
   const trailer = pickTrailer(movie.videos?.results ?? []);
-  const directorNames = directors(movie);
+  const directorList = directorsOf(movie);
   const cast = movie.credits?.cast.slice(0, 15) ?? [];
   const certification = frenchCertification(movie);
   const facts = [releaseYear(movie.release_date), runtime(movie.runtime), certification].filter(Boolean);
@@ -151,10 +152,12 @@ function MovieView({ movie }: { movie: MovieDetail }) {
               ) : (
                 <p className="text-sm text-mute">Pas encore assez de votes pour une note.</p>
               )}
-              {directorNames.length ? (
+              {directorList.length ? (
                 <div className="text-left sm:border-l sm:border-line sm:pl-8">
                   <p className="marquee text-[11px] text-mute">Réalisation</p>
-                  <p className="font-display text-lg">{directorNames.join(", ")}</p>
+                  <p className="font-display text-lg">
+                    <PeopleLinks people={directorList} />
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -225,7 +228,8 @@ function MovieView({ movie }: { movie: MovieDetail }) {
                   <ul className="flex w-max gap-4 pb-2">
                     {cast.map((person) => (
                       <li key={`${person.id}-${person.order}`} className="w-28 shrink-0 snap-start sm:w-32">
-                        <div className="aspect-[3/4] overflow-hidden bg-ink-2 ring-1 ring-line ring-inset">
+                        <Link to={personHref(person)} className="group block">
+                        <div className="aspect-[3/4] overflow-hidden bg-ink-2 ring-1 ring-line ring-inset transition-shadow group-hover:ring-gold/70">
                           {person.profile_path ? (
                             <img
                               src={profileUrl(person.profile_path)}
@@ -234,7 +238,7 @@ function MovieView({ movie }: { movie: MovieDetail }) {
                               height={278}
                               loading="lazy"
                               decoding="async"
-                              className="size-full object-cover transition duration-500 hover:grayscale-0 [@media(hover:hover)]:grayscale"
+                              className="size-full object-cover transition duration-500 group-hover:grayscale-0 group-focus-visible:grayscale-0 [@media(hover:hover)]:grayscale"
                             />
                           ) : (
                             <div className="grid size-full place-items-center text-bone/20">
@@ -242,10 +246,11 @@ function MovieView({ movie }: { movie: MovieDetail }) {
                             </div>
                           )}
                         </div>
-                        <p className="mt-2 text-sm leading-tight font-semibold">{person.name}</p>
+                        <p className="mt-2 text-sm leading-tight font-semibold transition-colors group-hover:text-gold-bright">{person.name}</p>
                         {person.character ? (
                           <p className="mt-0.5 line-clamp-2 text-xs text-mute">{person.character}</p>
                         ) : null}
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -258,7 +263,7 @@ function MovieView({ movie }: { movie: MovieDetail }) {
             <SectionTitle id="fiche-technique" eyebrow="Générique">
               Fiche technique
             </SectionTitle>
-            <TechnicalSheet movie={movie} directorNames={directorNames} certification={certification} />
+            <TechnicalSheet movie={movie} directors={directorList} certification={certification} />
           </aside>
         </div>
       </div>
@@ -300,19 +305,31 @@ const languageNames = displayNames("language");
 // on retraduit à partir du code ISO 3166-1.
 const regionNames = displayNames("region");
 
+/** Noms séparés par des virgules, chacun lié à sa page. */
+function PeopleLinks({ people }: { people: Pick<CrewMember, "id" | "name">[] }) {
+  return people.map((person, i) => (
+    <span key={person.id}>
+      {i > 0 ? ", " : null}
+      <Link to={personHref(person)} className="underline decoration-gold/40 underline-offset-4 transition-colors hover:text-gold-bright">
+        {person.name}
+      </Link>
+    </span>
+  ));
+}
+
 function TechnicalSheet({
   movie,
-  directorNames,
+  directors,
   certification,
 }: {
   movie: MovieDetail;
-  directorNames: string[];
+  directors: Pick<CrewMember, "id" | "name">[];
   certification?: string;
 }) {
   const language = movie.original_language ? (languageNames?.of(movie.original_language) ?? movie.original_language) : "";
   const rows: [string, ReactNode][] = [
     ["Titre original", movie.original_title],
-    ["Réalisation", directorNames.join(", ")],
+    ["Réalisation", directors.length ? <PeopleLinks people={directors} /> : ""],
     ["Sortie", releaseDateLong(movie.release_date)],
     ["Durée", runtime(movie.runtime)],
     ["Pays", movie.production_countries.map((c) => regionNames?.of(c.iso_3166_1) ?? c.name).join(", ")],

@@ -30,6 +30,7 @@ const ALLOWED_PATHS = [
     '#^/search/movie$#',
     '#^/discover/movie$#',
     '#^/genre/movie/list$#',
+    '#^/person/\d{1,9}$#',
 ];
 
 const ALLOWED_PARAMS = [

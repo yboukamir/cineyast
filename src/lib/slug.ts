@@ -18,7 +18,14 @@ export const movieHref = (movie: { id: number; title: string }) => {
   return slug ? `/film/${movie.id}-${slug}` : `/film/${movie.id}`;
 };
 
-export const parseMovieId = (param: string | undefined) => {
+/** /personne/287-brad-pitt — même principe que les fiches films. */
+export const personHref = (person: { id: number; name: string }) => {
+  const slug = slugify(person.name);
+  return slug ? `/personne/${person.id}-${slug}` : `/personne/${person.id}`;
+};
+
+/** Identifiant en tête d'un paramètre d'URL « 550-fight-club » ; NaN s'il est absent ou invalide. */
+export const parseId = (param: string | undefined) => {
   const id = Number.parseInt(param ?? "", 10);
   return Number.isInteger(id) && id > 0 ? id : NaN;
 };

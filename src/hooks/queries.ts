@@ -38,6 +38,13 @@ export const useMovie = (id: number) =>
     enabled: Number.isInteger(id) && id > 0,
   });
 
+export const usePerson = (id: number) =>
+  useQuery({
+    queryKey: ["person", id],
+    queryFn: ({ signal }) => api.person(id, signal),
+    enabled: Number.isInteger(id) && id > 0,
+  });
+
 /**
  * Catalogue paginé. Avec un titre, on passe par /search/movie (qui ne sait
  * filtrer que par année) : genres et note minimale sont alors appliqués sur

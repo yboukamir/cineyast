@@ -94,6 +94,33 @@ export interface MovieDetail extends Omit<MovieSummary, "genre_ids"> {
   "watch/providers"?: { results: Partial<Record<string, WatchAvailability>> };
 }
 
+export interface PersonCastCredit extends MovieSummary {
+  character: string;
+  credit_id: string;
+  adult?: boolean;
+}
+
+export interface PersonCrewCredit extends MovieSummary {
+  job: string;
+  department: string;
+  credit_id: string;
+  adult?: boolean;
+}
+
+export interface PersonDetail {
+  id: number;
+  name: string;
+  /** Vide quand TMDB n'a pas de traduction française. */
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  profile_path: string | null;
+  known_for_department: string;
+  movie_credits: { cast: PersonCastCredit[]; crew: PersonCrewCredit[] };
+  external_ids: { imdb_id: string | null };
+}
+
 // ─── Requêtes ────────────────────────────────────────────────────────────────
 
 export class TmdbError extends Error {
@@ -184,6 +211,9 @@ export const api = {
       signal,
     ),
 
+  person: (id: number, signal?: AbortSignal) =>
+    tmdb<PersonDetail>(`/person/${id}`, { append_to_response: "movie_credits,external_ids" }, signal),
+
   search: (query: string, page: number, year: number | undefined, signal?: AbortSignal) =>
     tmdb<Paginated<MovieSummary>>("/search/movie", { query, page, primary_release_year: year }, signal),
 
@@ -230,6 +260,10 @@ export const backdropSrcSet = (path: string | null) =>
 
 export const profileUrl = (path: string | null) => (path ? `${IMG}/w185${path}` : undefined);
 
+/** TMDB ne propose que w185 et h632 (≈ 421 px de large) pour les photos de profil. */
+export const profileSrcSet = (path: string | null) =>
+  path ? `${IMG}/w185${path} 185w, ${IMG}/h632${path} 421w` : undefined;
+
 // ─── Extraction ──────────────────────────────────────────────────────────────
 
 /** Bande-annonce YouTube la plus pertinente : trailer > teaser, VF > VO, officielle d'abord. */
@@ -256,8 +290,12 @@ export function frenchCertification(movie: MovieDetail): string | undefined {
   return cert ? (FR_CERTIFICATIONS[cert] ?? cert) : undefined;
 }
 
-export const directors = (movie: MovieDetail) =>
-  movie.credits.crew.filter((c) => c.job === "Director").map((c) => c.name);
+/** Réalisateurs, sans doublon, avec leur identifiant pour lier leur page. */
+export const directorsOf = (movie: MovieDetail): Pick<CrewMember, "id" | "name">[] =>
+  movie.credits.crew
+    .filter((c) => c.job === "Director")
+    .filter((c, i, all) => all.findIndex((d) => d.id === c.id) === i)
+    .map(({ id, name }) => ({ id, name }));
 
 /** Offres en France, ou undefined si JustWatch n'en référence aucune. */
 export const frenchWatchProviders = (movie: MovieDetail): WatchAvailability | undefined =>

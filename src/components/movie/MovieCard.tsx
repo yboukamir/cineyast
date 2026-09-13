@@ -8,7 +8,10 @@ import type { MovieSummary } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 
 export type CardMovie = Pick<MovieSummary, "id" | "title" | "poster_path" | "release_date" | "vote_average"> &
-  Partial<Pick<MovieSummary, "overview" | "vote_count">>;
+  Partial<Pick<MovieSummary, "overview" | "vote_count">> & {
+    /** Ligne secondaire facultative, par exemple le rôle dans une filmographie. */
+    subtitle?: string;
+  };
 
 interface MovieCardProps {
   movie: CardMovie;
@@ -68,6 +71,7 @@ export function MovieCard({ movie, sizes, eager, rank, className }: MovieCardPro
               </span>
             ) : null}
           </p>
+          {movie.subtitle ? <p className="mt-1 line-clamp-1 text-xs text-mute">{movie.subtitle}</p> : null}
         </div>
       </Link>
 

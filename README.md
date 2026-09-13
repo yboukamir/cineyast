@@ -4,7 +4,8 @@
 
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
 Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting,
-bande-annonce et offres de streaming en France, recommandations, et une liste de favoris personnelle.
+bande-annonce et offres de streaming en France, pages acteurs et réalisateurs avec leur filmographie,
+recommandations, et une liste de favoris personnelle.
 
 Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de l'API publique
 [TMDB](https://www.themoviedb.org/) — aucune donnée de film n'est codée en dur.
@@ -188,7 +189,8 @@ src/
 │   └── layout/      en-tête, pied de page, logo, page d'erreur
 ├── hooks/           requêtes TMDB, favoris (localStorage), utilitaires
 ├── lib/             client TMDB typé, formatage FR, slugs
-└── pages/           Accueil, Explorer, Fiche film, Favoris, 404
+├── lib/filmography.ts  regroupement des crédits (réalisation, rôles, scénario, production, apparitions)
+└── pages/           Accueil, Explorer, Fiche film, Fiche personne, Favoris, 404
 api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
 api/film.js          balises de partage propres à chaque fiche film (Vercel)
 server/              proxy TMDB de développement + CSP partagée
@@ -199,5 +201,5 @@ vercel.json          réécritures (/api/tmdb.php, /film/:slug, repli SPA) et en
 
 ## Pistes pour la v2
 
-- Pages acteurs et réalisateurs (filmographies)
+- Aperçus de partage propres aux pages personnes (comme `api/film.js` pour les fiches films)
 - Pré-rendu du contenu complet des fiches pour le référencement (les balises de partage sont déjà servies)

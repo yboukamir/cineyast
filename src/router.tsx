@@ -12,6 +12,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "explorer", lazy: () => import("@/pages/ExplorePage").then((m) => ({ Component: m.default })) },
       { path: "film/:id", lazy: () => import("@/pages/MoviePage").then((m) => ({ Component: m.default })) },
+      { path: "personne/:id", lazy: () => import("@/pages/PersonPage").then((m) => ({ Component: m.default })) },
       { path: "favoris", lazy: () => import("@/pages/FavoritesPage").then((m) => ({ Component: m.default })) },
       { path: "*", lazy: () => import("@/pages/NotFoundPage").then((m) => ({ Component: m.default })) },
     ],
