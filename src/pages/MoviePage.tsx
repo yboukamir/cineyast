@@ -1,18 +1,19 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { ExternalLink, Heart, Play, UserRound } from "lucide-react";
+import { ChevronLeft, Play } from "lucide-react";
+import { FavoriteButton } from "@/components/movie/FavoriteButton";
 import { MovieRow } from "@/components/movie/MovieRow";
+import { NoteTuiles } from "@/components/movie/NoteTuiles";
 import { Poster } from "@/components/movie/Poster";
 import { Trailer } from "@/components/movie/Trailer";
 import { WatchProviders } from "@/components/movie/WatchProviders";
 import { EmptyState, ErrorState } from "@/components/States";
+import { heroTitleSize } from "@/components/ui/hero-carousel";
 import { Rating } from "@/components/ui/rating";
-import { Scroller } from "@/components/ui/scroller";
-import { TicketButton, TicketLink } from "@/components/ui/ticket-button";
-import { useMovie } from "@/hooks/queries";
+import { useGenres, useMovie } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useFavorites } from "@/hooks/useFavorites";
-import { count, releaseDateLong, releaseYear, runtime, score } from "@/lib/format";
+import { count, releaseYear, runtime, score } from "@/lib/format";
+import { numeroDeSalle } from "@/lib/salles";
 import { movieHref, parseId, personHref } from "@/lib/slug";
 import {
   backdropSrcSet,
@@ -21,14 +22,16 @@ import {
   frenchCertification,
   frenchWatchProviders,
   pickTrailer,
+  profileSrcSet,
   profileUrl,
   TmdbError,
+  type CastMember,
   type CrewMember,
   type MovieDetail,
 } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 
-const BACKDROP_HEIGHT = "h-[46svh] min-h-72 md:h-[72svh] md:max-h-[46rem]";
+const PAGE = "mx-auto max-w-page px-gouttiere md:px-gouttiere-lg";
 
 export default function MoviePage() {
   const { id: param } = useParams();
@@ -41,8 +44,17 @@ export default function MoviePage() {
   if (Number.isNaN(id) || (error instanceof TmdbError && error.status === 404)) return <MovieNotFound />;
   if (isError) {
     return (
-      <div className="px-page pt-28">
-        <ErrorState error={error} onRetry={() => void refetch()} />
+      <div className={cn(PAGE, "pt-8")}>
+        <ErrorState
+          error={error}
+          title="cette fiche n'a pas pu être chargée."
+          onRetry={() => void refetch()}
+          action={
+            <Link to="/" className="btn btn-sm">
+              Retour à l'accueil
+            </Link>
+          }
+        />
       </div>
     );
   }
@@ -50,10 +62,13 @@ export default function MoviePage() {
   return <MovieView movie={movie} />;
 }
 
+/** Carré jaune qui sépare les faits (année, durée…). */
+const Separateur = () => <span className="size-2 border-2 border-noir bg-jaune" aria-hidden />;
+
 function MovieView({ movie }: { movie: MovieDetail }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isFavorite, toggle } = useFavorites();
+  const genres = useGenres();
   const trailerRef = useRef<HTMLElement>(null);
 
   // URL canonique : /film/550 ou /film/550-ancien-slug → /film/550-fight-club
@@ -62,233 +77,269 @@ function MovieView({ movie }: { movie: MovieDetail }) {
     if (pathname !== canonical) navigate(canonical, { replace: true });
   }, [pathname, canonical, navigate]);
 
-  const favorite = isFavorite(movie.id);
   const trailer = pickTrailer(movie.videos?.results ?? []);
   const directorList = directorsOf(movie);
   const cast = movie.credits?.cast.slice(0, 15) ?? [];
   const certification = frenchCertification(movie);
-  const facts = [releaseYear(movie.release_date), runtime(movie.runtime), certification].filter(Boolean);
-  const hasScore = movie.vote_count > 0;
+  const facts = [releaseYear(movie.release_date), runtime(movie.runtime)].filter(Boolean);
+  const hasScore = movie.vote_count > 0 && movie.vote_average > 0;
   const hasRecommendations = (movie.recommendations?.results.length ?? 0) > 0;
 
   return (
     <article>
-      <div className={cn("relative", BACKDROP_HEIGHT)}>
-        {movie.backdrop_path ? (
-          <img
-            src={backdropUrl(movie.backdrop_path)}
-            srcSet={backdropSrcSet(movie.backdrop_path)}
-            sizes="100vw"
-            alt=""
-            fetchPriority="high"
-            className="absolute inset-0 size-full object-cover object-[50%_25%]"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-ink-2" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/40" />
-        <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgb(12_10_9/0.75),transparent_65%)] md:block" />
-      </div>
-
-      <div className="px-page relative -mt-44 md:-mt-80">
-        <div className="grid gap-8 md:grid-cols-[minmax(0,17rem)_1fr] md:gap-12 lg:grid-cols-[minmax(0,21rem)_1fr]">
-          <div className="mx-auto w-44 sm:w-52 md:w-full">
-            <div className="relative aspect-[2/3] overflow-hidden shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] ring-1 ring-gold/40">
-              <Poster
-                path={movie.poster_path}
-                title={movie.title}
-                sizes="(min-width: 1024px) 336px, (min-width: 768px) 272px, 208px"
-                eager
+      {/* Héros de fiche : l'image sans bleu derrière, le bandeau outremer pour le texte. */}
+      <section aria-labelledby="film-titre">
+        <div className="mx-auto max-w-page md:px-gouttiere-lg md:pt-8">
+          <div className="zone aspect-[16/9] max-h-[520px] w-full border-y-[3px] border-noir md:border-[3px] md:shadow-dure-bleue">
+            {movie.backdrop_path ? (
+              <img
+                src={backdropUrl(movie.backdrop_path)}
+                srcSet={backdropSrcSet(movie.backdrop_path)}
+                sizes="(min-width: 1440px) 1344px, (min-width: 768px) calc(100vw - 96px), 100vw"
+                alt=""
+                fetchPriority="high"
+                className="absolute inset-0 size-full object-cover"
               />
-            </div>
-          </div>
-
-          <div className="text-center md:pt-28 md:text-left lg:pt-36">
-            {facts.length ? (
-              <p className="marquee flex flex-wrap justify-center gap-x-3 text-xs text-gold md:justify-start">
-                {facts.map((fact, i) => (
-                  <span key={fact}>
-                    {i > 0 ? (
-                      <span aria-hidden className="mr-3 text-line-strong">
-                        /
-                      </span>
-                    ) : null}
-                    {fact}
-                  </span>
-                ))}
-              </p>
             ) : null}
-
-            <h1 className="mt-3 font-display text-4xl leading-[1.02] font-medium md:text-6xl lg:text-7xl">{movie.title}</h1>
-            {movie.original_title !== movie.title ? (
-              <p className="mt-2 font-display text-lg text-mute italic">{movie.original_title}</p>
-            ) : null}
-            {movie.tagline ? <p className="mt-4 font-display text-xl text-gold-bright italic">« {movie.tagline} »</p> : null}
-
-            {movie.genres.length ? (
-              <ul className="mt-5 flex flex-wrap justify-center gap-2 md:justify-start">
-                {movie.genres.map((genre) => (
-                  <li key={genre.id}>
-                    <Link
-                      to={`/explorer?genres=${genre.id}`}
-                      className="marquee flex h-8 items-center border border-line-strong px-3 text-[11px] text-bone/80 transition-colors hover:border-gold hover:text-gold"
-                    >
-                      {genre.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:justify-start">
-              {hasScore ? (
-                <div className="flex items-center gap-3 text-left">
-                  <span className="font-display text-5xl leading-none">{score(movie.vote_average)}</span>
-                  <div>
-                    <Rating value={movie.vote_average} />
-                    <p className="mt-1 text-xs text-mute">{count(movie.vote_count)} votes sur TMDB</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-mute">Pas encore assez de votes pour une note.</p>
-              )}
-              {directorList.length ? (
-                <div className="text-left sm:border-l sm:border-line sm:pl-8">
-                  <p className="marquee text-[11px] text-mute">Réalisation</p>
-                  <p className="font-display text-lg">
-                    <PeopleLinks people={directorList} />
-                  </p>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
-              {trailer ? (
-                <TicketButton
-                  variant="velvet"
-                  onClick={() => trailerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-                >
-                  <Play className="fill-current" /> Bande-annonce
-                </TicketButton>
-              ) : null}
-              <TicketButton variant={favorite ? "gold" : "ghost"} aria-pressed={favorite} onClick={() => toggle(movie)}>
-                <Heart className={cn(favorite && "fill-current")} />
-                {favorite ? "Dans vos favoris" : "Ajouter aux favoris"}
-              </TicketButton>
-            </div>
+            <nav aria-label="Fil d'Ariane" className="absolute top-3 left-3 md:top-6 md:left-6">
+              <Link to="/" className="btn btn-sm bg-creme">
+                <ChevronLeft className="size-[18px]" strokeWidth={2.6} aria-hidden />
+                Accueil
+              </Link>
+            </nav>
           </div>
         </div>
 
-        <div className="mt-16 grid gap-14 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
-          <div className="min-w-0 space-y-14">
-            <section aria-labelledby="synopsis">
-              <SectionTitle id="synopsis" eyebrow="L'histoire">
-                Synopsis
-              </SectionTitle>
-              {movie.overview ? (
-                <p className="mt-5 max-w-3xl text-lg leading-relaxed text-bone/90 first-letter:float-left first-letter:mt-1 first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.8] first-letter:text-gold">
-                  {movie.overview}
+        <div className="border-b-[3px] border-noir bg-outremer text-creme">
+          <div className="mx-auto grid max-w-page grid-cols-[112px_1fr] items-start gap-x-4 px-gouttiere pb-8 md:grid-cols-[240px_1fr] md:gap-x-12 md:px-gouttiere-lg md:pb-12">
+            <div className="zone -mt-20 aspect-[2/3] border-[3px] border-noir shadow-dure-jaune md:-mt-56">
+              <Poster path={movie.poster_path} title={movie.title} sizes="(min-width: 768px) 240px, 112px" eager />
+            </div>
+
+            <div className="min-w-0 pt-4 md:pt-8">
+              {facts.length || certification ? (
+                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] font-semibold md:text-lg">
+                  {facts.map((fact, i) => (
+                    <Fragment key={fact}>
+                      {i > 0 ? <Separateur /> : null}
+                      <span>{fact}</span>
+                    </Fragment>
+                  ))}
+                  {certification ? (
+                    <span className="inline-flex h-7 items-center border-2 border-creme px-2 text-sm font-bold tracking-wide">
+                      {certification}
+                    </span>
+                  ) : null}
                 </p>
-              ) : (
-                <p className="mt-5 text-mute italic">Aucun synopsis n'est disponible en français pour ce film.</p>
-              )}
-            </section>
+              ) : null}
+              <h1 id="film-titre" className={cn("hero-titre mt-3 md:mt-4", heroTitleSize(movie.title))}>
+                {movie.title}
+              </h1>
+              {movie.tagline ? (
+                <p className="mt-3 max-w-[38ch] text-lg font-semibold italic md:mt-4 md:text-2xl">« {movie.tagline} »</p>
+              ) : null}
+            </div>
 
-            {/* Juste après le synopsis : sur mobile, le bloc latéral passe tout en bas de la page. */}
-            <section aria-labelledby="ou-regarder">
-              <SectionTitle id="ou-regarder" eyebrow="En France">
-                Où regarder
-              </SectionTitle>
-              <WatchProviders availability={frenchWatchProviders(movie)} releaseDate={movie.release_date} />
-            </section>
-
-            {trailer ? (
-              <section ref={trailerRef} aria-labelledby="bande-annonce" className="scroll-mt-24">
-                <SectionTitle id="bande-annonce" eyebrow="En projection">
-                  Bande-annonce
-                </SectionTitle>
-                <Trailer video={trailer} title={movie.title} className="mt-5" />
-                <a
-                  href={`https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="marquee mt-3 inline-flex items-center gap-1.5 text-xs text-mute hover:text-gold"
-                >
-                  Voir sur YouTube <ExternalLink className="size-3.5" aria-hidden />
-                </a>
-              </section>
-            ) : null}
-
-            {cast.length ? (
-              <section aria-labelledby="casting">
-                <SectionTitle id="casting" eyebrow="Distribution">
-                  Casting principal
-                </SectionTitle>
-                <Scroller label="Casting principal" className="mt-5 snap-x">
-                  <ul className="flex w-max gap-4 pb-2">
-                    {cast.map((person) => (
-                      <li key={`${person.id}-${person.order}`} className="w-28 shrink-0 snap-start sm:w-32">
-                        <Link to={personHref(person)} className="group block">
-                        <div className="aspect-[3/4] overflow-hidden bg-ink-2 ring-1 ring-line ring-inset transition-shadow group-hover:ring-gold/70">
-                          {person.profile_path ? (
-                            <img
-                              src={profileUrl(person.profile_path)}
-                              alt=""
-                              width={185}
-                              height={278}
-                              loading="lazy"
-                              decoding="async"
-                              className="size-full object-cover transition duration-500 group-hover:grayscale-0 group-focus-visible:grayscale-0 [@media(hover:hover)]:grayscale"
-                            />
-                          ) : (
-                            <div className="grid size-full place-items-center text-bone/20">
-                              <UserRound className="size-10" strokeWidth={1} aria-hidden />
-                            </div>
-                          )}
-                        </div>
-                        <p className="mt-2 text-sm leading-tight font-semibold transition-colors group-hover:text-gold-bright">{person.name}</p>
-                        {person.character ? (
-                          <p className="mt-0.5 line-clamp-2 text-xs text-mute">{person.character}</p>
-                        ) : null}
+            <div className="col-span-2 mt-6 flex flex-col gap-5 md:col-start-2 md:mt-7">
+              {movie.genres.length ? (
+                <ul aria-label="Genres" className="m-0 flex list-none flex-wrap gap-3 p-0">
+                  {movie.genres.map((genre) => {
+                    const salle = numeroDeSalle(genres.data, genre.id);
+                    return (
+                      <li key={genre.id}>
+                        <Link to={`/explorer?genres=${genre.id}`} className="plaque">
+                          {salle ? (
+                            <span className="plaque-n" aria-hidden>
+                              {salle}
+                            </span>
+                          ) : null}
+                          <span className="plaque-t">{genre.name}</span>
                         </Link>
                       </li>
-                    ))}
-                  </ul>
-                </Scroller>
-              </section>
-            ) : null}
-          </div>
+                    );
+                  })}
+                </ul>
+              ) : null}
 
-          <aside aria-labelledby="fiche-technique">
-            <SectionTitle id="fiche-technique" eyebrow="Générique">
-              Fiche technique
-            </SectionTitle>
-            <TechnicalSheet movie={movie} directors={directorList} certification={certification} />
-          </aside>
+              {hasScore ? (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                  <NoteTuiles value={movie.vote_average} size="lg" />
+                  <span className="inline-flex items-center gap-2">
+                    <Rating value={movie.vote_average} size="lg" decorative />
+                    {/* Valeur déjà annoncée par les tuiles : masquée aux lecteurs d'écran pour ne pas la répéter. */}
+                    <span className="text-lg font-bold" aria-hidden>
+                      {score(movie.vote_average)}
+                      <span className="text-sm font-semibold">/10</span>
+                    </span>
+                  </span>
+                  <span className="text-sm font-semibold">{count(movie.vote_count)} votes sur TMDB</span>
+                </div>
+              ) : (
+                <p className="text-[15px] font-semibold">Pas encore assez de votes pour une note.</p>
+              )}
+
+              {directorList.length ? (
+                <p className="text-[15px] md:text-base">
+                  Réalisation :{" "}
+                  <PeopleLinks
+                    people={directorList}
+                    className="font-bold underline decoration-2 underline-offset-4 hover:bg-jaune hover:text-noir hover:no-underline"
+                  />
+                </p>
+              ) : null}
+
+              <div className="grid grid-cols-2 gap-3 md:flex md:gap-3.5">
+                {trailer ? (
+                  <a
+                    href="#bande-annonce"
+                    className="btn btn-primary"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                      trailerRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+                    }}
+                  >
+                    <Play className="size-5 fill-current" aria-hidden />
+                    Bande-annonce
+                  </a>
+                ) : null}
+                <FavoriteButton
+                  movie={movie}
+                  variant="bouton"
+                  className={trailer ? undefined : "col-span-2"}
+                  label={
+                    <>
+                      <span className="md:hidden">Favori</span>
+                      <span className="hidden md:inline">Ajouter aux favoris</span>
+                    </>
+                  }
+                />
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <div className={cn(PAGE, "md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] md:gap-16")}>
+        <div className="min-w-0">
+          <section className="pt-10 md:pt-14" aria-labelledby="synopsis">
+            <SectionHead id="synopsis" eyebrow="L'histoire">
+              Synopsis
+            </SectionHead>
+            {movie.overview ? (
+              <p className="mt-4 max-w-[68ch] text-[17px] leading-relaxed">{movie.overview}</p>
+            ) : (
+              <p className="mt-4 text-gris italic">Aucun synopsis n'est disponible en français pour ce film.</p>
+            )}
+          </section>
+
+          <section className="pt-12 md:pt-16" aria-labelledby="ou-regarder">
+            <SectionHead id="ou-regarder" eyebrow="Séances à domicile">
+              Où regarder en France
+            </SectionHead>
+            <WatchProviders availability={frenchWatchProviders(movie)} releaseDate={movie.release_date} />
+          </section>
+
+          {cast.length ? (
+            <section className="pt-12 md:pt-16" aria-labelledby="casting">
+              <SectionHead id="casting" eyebrow="Devant la caméra">
+                Casting principal
+              </SectionHead>
+              <CastRow cast={cast} />
+            </section>
+          ) : null}
+
+          {trailer ? (
+            <section
+              ref={trailerRef}
+              id="bande-annonce"
+              className="scroll-mt-36 pt-12 md:scroll-mt-24 md:pt-16"
+              aria-labelledby="bande-annonce-titre"
+            >
+              <SectionHead id="bande-annonce-titre" eyebrow="Vidéo">
+                Bande-annonce
+              </SectionHead>
+              <Trailer video={trailer} title={movie.title} className="mt-5 max-w-[880px]" />
+              <p className="mt-3 text-sm text-gris">Bandes-annonces hébergées par YouTube.</p>
+            </section>
+          ) : null}
+        </div>
+
+        <aside className="pt-12 md:pt-14" aria-labelledby="fiche-technique">
+          <SectionHead id="fiche-technique" eyebrow="Détails">
+            Fiche technique
+          </SectionHead>
+          <TechnicalSheet movie={movie} directors={directorList} certification={certification} />
+        </aside>
       </div>
 
       {hasRecommendations ? (
-        <div className="mt-12">
-          <MovieRow
-            eyebrow="Si vous avez aimé"
-            title="Recommandations"
-            query={{ data: movie.recommendations, isPending: false, isError: false, error: null, refetch: () => undefined }}
-          />
-        </div>
+        <MovieRow
+          eyebrow="Si vous avez aimé"
+          title="Recommandations"
+          query={{ data: movie.recommendations, isPending: false, isError: false, error: null, refetch: () => undefined }}
+        />
       ) : null}
     </article>
   );
 }
 
-function SectionTitle({ id, eyebrow, children }: { id: string; eyebrow: string; children: ReactNode }) {
+function SectionHead({ id, eyebrow, children }: { id: string; eyebrow: string; children: ReactNode }) {
   return (
-    <div>
-      <p className="marquee text-[11px] text-gold">{eyebrow}</p>
-      <h2 id={id} className="mt-1 font-display text-2xl md:text-3xl">
+    <>
+      <p className="surtitre mb-1">{eyebrow}</p>
+      <h2 id={id} className="titre-section">
         {children}
       </h2>
-    </div>
+    </>
+  );
+}
+
+const initiales = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("");
+
+function CastRow({ cast }: { cast: CastMember[] }) {
+  return (
+    <ul className="rangee-scroll m-0 list-none p-0" tabIndex={0} aria-label="Casting principal, rangée défilante">
+      {cast.map((person) => {
+        const href = personHref(person);
+        return (
+          <li key={`${person.id}-${person.order}`} className="carte">
+            <Link to={href} className="portrait carte-media" tabIndex={-1} aria-hidden>
+              {person.profile_path ? (
+                <img
+                  src={profileUrl(person.profile_path)}
+                  srcSet={profileSrcSet(person.profile_path)}
+                  sizes="(min-width: 768px) 176px, 140px"
+                  alt=""
+                  width={185}
+                  height={278}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : (
+                <div className="affiche-absente content-center">
+                  <b className="!text-[30px]">{initiales(person.name)}</b>
+                  <small>Portrait indisponible</small>
+                </div>
+              )}
+            </Link>
+            <p className="carte-titre">
+              <Link to={href} className="decoration-2 underline-offset-2 hover:underline">
+                {person.name}
+              </Link>
+            </p>
+            {person.character ? <p className="mt-0.5 line-clamp-2 text-sm text-gris">{person.character}</p> : null}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -306,11 +357,11 @@ const languageNames = displayNames("language");
 const regionNames = displayNames("region");
 
 /** Noms séparés par des virgules, chacun lié à sa page. */
-function PeopleLinks({ people }: { people: Pick<CrewMember, "id" | "name">[] }) {
+function PeopleLinks({ people, className }: { people: Pick<CrewMember, "id" | "name">[]; className?: string }) {
   return people.map((person, i) => (
     <span key={person.id}>
       {i > 0 ? ", " : null}
-      <Link to={personHref(person)} className="underline decoration-gold/40 underline-offset-4 transition-colors hover:text-gold-bright">
+      <Link to={personHref(person)} className={className}>
         {person.name}
       </Link>
     </span>
@@ -329,60 +380,44 @@ function TechnicalSheet({
   const language = movie.original_language ? (languageNames?.of(movie.original_language) ?? movie.original_language) : "";
   const rows: [string, ReactNode][] = [
     ["Titre original", movie.original_title],
-    ["Réalisation", directors.length ? <PeopleLinks people={directors} /> : ""],
-    ["Sortie", releaseDateLong(movie.release_date)],
+    ["Réalisation", directors.length ? <PeopleLinks people={directors} className="lien" /> : ""],
+    ["Année", releaseYear(movie.release_date)],
     ["Durée", runtime(movie.runtime)],
+    ["Classification", certification],
     ["Pays", movie.production_countries.map((c) => regionNames?.of(c.iso_3166_1) ?? c.name).join(", ")],
     ["Langue originale", language ? language.charAt(0).toUpperCase() + language.slice(1) : ""],
-    ["Classification", certification],
+    ["Genres", movie.genres.map((g) => g.name).join(", ")],
+    ["Note TMDB", movie.vote_count > 0 ? `${score(movie.vote_average)} / 10 (${count(movie.vote_count)} votes)` : ""],
   ];
 
   return (
-    <>
-      <dl className="mt-5 divide-y divide-line border-y border-line text-sm">
-        {rows
-          .filter(([, value]) => Boolean(value))
-          .map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[8.5rem_1fr] gap-3 py-3">
-              <dt className="marquee text-[11px] leading-5 text-mute">{label}</dt>
-              <dd className="text-bone/90">{value}</dd>
-            </div>
-          ))}
-      </dl>
-      <div className="marquee mt-5 flex flex-wrap gap-5 text-xs text-mute">
-        {movie.imdb_id ? (
-          <a
-            href={`https://www.imdb.com/title/${encodeURIComponent(movie.imdb_id)}/`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-gold"
-          >
-            IMDb <ExternalLink className="size-3.5" aria-hidden />
-          </a>
-        ) : null}
-        <a
-          href={`https://www.themoviedb.org/movie/${movie.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 hover:text-gold"
-        >
-          TMDB <ExternalLink className="size-3.5" aria-hidden />
-        </a>
-      </div>
-    </>
+    <dl className="mt-5 border-t-[3px] border-noir">
+      {rows
+        .filter(([, value]) => Boolean(value))
+        .map(([label, value]) => (
+          <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr] gap-4 border-b-2 border-filet py-3">
+            <dt className="pt-0.5 text-sm font-bold tracking-[.08em] text-gris uppercase">{label}</dt>
+            <dd className="m-0 font-semibold">{value}</dd>
+          </div>
+        ))}
+    </dl>
   );
 }
 
 function MovieSkeleton() {
   return (
-    <div aria-label="Chargement de la fiche" aria-busy>
-      <div className={cn("skeleton", BACKDROP_HEIGHT)} />
-      <div className="px-page relative -mt-44 grid gap-8 md:-mt-80 md:grid-cols-[17rem_1fr] md:gap-12 lg:grid-cols-[21rem_1fr]">
-        <div className="skeleton mx-auto aspect-[2/3] w-44 sm:w-52 md:w-full" />
-        <div className="space-y-4 md:pt-28 lg:pt-36">
-          <div className="skeleton mx-auto h-4 w-40 md:mx-0" />
-          <div className="skeleton mx-auto h-14 w-3/4 md:mx-0" />
-          <div className="skeleton mx-auto h-4 w-1/2 md:mx-0" />
+    <div className={cn(PAGE, "pt-8")} aria-busy="true" aria-label="Chargement de la fiche">
+      <div className="grid grid-cols-[112px_1fr] items-start gap-x-4 border-[3px] border-noir p-4 md:grid-cols-[240px_1fr] md:gap-x-12 md:p-8">
+        <div className="squelette aspect-[2/3] border-[3px] border-filet" />
+        <div className="grid gap-3 pt-2">
+          <div className="squelette h-4 w-2/5" />
+          <div className="squelette h-14 w-4/5 md:h-24" />
+          <div className="squelette h-5 w-3/5" />
+          <div className="mt-2 flex gap-3">
+            <div className="squelette h-11 w-24" />
+            <div className="squelette h-11 w-24" />
+          </div>
+          <div className="squelette mt-2 h-11 w-40" />
         </div>
       </div>
     </div>
@@ -392,12 +427,16 @@ function MovieSkeleton() {
 function MovieNotFound() {
   useDocumentTitle("Film introuvable");
   return (
-    <div className="px-page pt-28">
-      <EmptyState title="Ce film n'est pas au programme.">
+    <div className={cn(PAGE, "pt-8")}>
+      <EmptyState
+        title="Ce film n'est pas au programme."
+        action={
+          <Link to="/explorer" className="btn btn-sm">
+            Explorer le catalogue
+          </Link>
+        }
+      >
         Il n'existe pas dans la base TMDB ou le lien est erroné.
-        <div className="mt-6 flex justify-center">
-          <TicketLink to="/explorer">Explorer le catalogue</TicketLink>
-        </div>
       </EmptyState>
     </div>
   );

@@ -4,12 +4,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router/dom";
 
 // Polices auto-hébergées (pas d'appel à Google Fonts : plus rapide et conforme RGPD).
-// Bodoni en version « standard » = axes graisse + taille optique : le contraste
-// des pleins et déliés s'adapte automatiquement aux grands titres.
-import "@fontsource-variable/bodoni-moda/standard.css";
-import "@fontsource-variable/bodoni-moda/wght-italic.css";
-import "@fontsource-variable/hanken-grotesk/wght.css";
-import "@fontsource-variable/big-shoulders-display";
+// Bebas Neue : titres, chiffres et logo (latin + latin étendu : É, À, Œ, Ç…).
+// Figtree en variable : texte courant, graisses 400 à 700 et italique des accroches.
+import "@fontsource/bebas-neue";
+import "@fontsource-variable/figtree/wght.css";
+import "@fontsource-variable/figtree/wght-italic.css";
 import "./index.css";
 
 import { queryClient } from "@/hooks/queries";

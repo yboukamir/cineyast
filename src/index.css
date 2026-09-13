@@ -1,114 +1,318 @@
 @import "tailwindcss";
 
-/* ─── Système visuel « salle obscure » ─────────────────────────────────────
-   Noir chaud (pas de gris bleuté), or de dorure, velours rouge de fauteuil.
-   Titres en Didone (Bodoni Moda), signalétique en grotesque condensée
-   façon marquise de cinéma (Big Shoulders), texte courant en Hanken Grotesk. */
+/* ─── Système visuel « L'Affiche » ─────────────────────────────────────────
+   Maquette validée par Yassine en septembre 2026. Jetons, base et composants
+   repris de la maquette à l'identique ; seuls changent le nom des polices
+   (auto-hébergées via Fontsource, pas de Google Fonts) et les pièces propres
+   à la maquette elle-même (mire colorée, annexe des états), retirées.
+   Palette fermée : toute couleur hors de cette liste est une erreur. */
 
 @theme {
-  --color-ink: #0c0a09;
-  --color-ink-2: #15110f;
-  --color-ink-3: #211b17;
-  --color-line: rgb(232 215 180 / 0.12);
-  --color-line-strong: rgb(232 215 180 / 0.24);
-  --color-bone: #efe6d4;
-  --color-mute: #a69d8c;
-  --color-gold: #c8a45a;
-  --color-gold-bright: #e4c47f;
-  --color-velvet: #8f1d1d;
-  --color-velvet-bright: #b52a25;
+  --color-*: initial;
+  --color-creme: #fffcf5; /* fond de page */
+  --color-blanc: #ffffff; /* fond des champs de saisie */
+  --color-noir: #111111; /* texte, bordures, ombres dures */
+  --color-gris: #5e5e5e; /* texte secondaire (6,3:1 sur crème) */
+  --color-filet: #d9d5cc; /* séparateurs non porteurs d'information */
+  --color-zone: #eae6dc; /* fond des images en attente ou absentes */
+  --color-zone-2: #dfdace; /* hachures des zones */
+  --color-outremer: #1f3bd9; /* signature : bandeau héros, surtitres, liens, focus */
+  --color-outremer-fonce: #172da8; /* survol des surfaces outremer */
+  --color-jaune: #ffd23f; /* action primaire, pastilles, surlignage (jamais sous du texte crème) */
+  --color-jaune-fonce: #f2c12e; /* survol de l'action primaire */
+  --color-erreur: #b3261e; /* état d'erreur (6,4:1 sur crème), toujours accompagné d'un libellé */
 
-  --font-display: "Bodoni Moda Variable", "Bodoni 72", Didot, "Times New Roman", serif;
-  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-marquee: "Big Shoulders Display Variable", "Arial Narrow", sans-serif;
+  /* Deux familles. Bebas Neue n'a pas de minuscules : titres, chiffres et logo seulement. */
+  --font-display: "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
+  --font-sans: "Figtree Variable", "Helvetica Neue", Arial, sans-serif;
 
-  --ease-cine: cubic-bezier(0.22, 1, 0.36, 1);
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-d-xs: 1.5rem;
+  --text-d-xs--line-height: 1;
+  --text-d-sm: 1.75rem;
+  --text-d-sm--line-height: 1;
+  --text-d-md: 2.5rem;
+  --text-d-md--line-height: 0.95;
+  --text-d-lg: 3.5rem;
+  --text-d-lg--line-height: 0.95;
+  --text-d-xl: 5rem;
+  --text-d-xl--line-height: 0.9;
+  --text-d-2xl: 7.5rem;
+  --text-d-2xl--line-height: 0.86;
 
-  --animate-fade-up: fade-up 0.7s var(--ease-cine) both;
-  @keyframes fade-up {
-    from {
-      opacity: 0;
-      transform: translateY(14px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
+  --container-page: 90rem;
+  --spacing-gouttiere: 1rem;
+  --spacing-gouttiere-lg: 3rem;
 
-  --animate-shimmer: shimmer 1.6s linear infinite;
-  @keyframes shimmer {
-    from {
-      transform: translateX(-100%);
-    }
-    to {
-      transform: translateX(100%);
-    }
-  }
+  /* Aucun arrondi : la direction est à angles vifs. */
+  --radius-*: initial;
+  --radius-none: 0px;
+
+  /* Ombres dures, sans flou. */
+  --shadow-*: initial;
+  --shadow-dure-sm: 3px 3px 0 0 #111111;
+  --shadow-dure: 5px 5px 0 0 #111111;
+  --shadow-dure-lg: 10px 10px 0 0 #111111;
+  --shadow-dure-bleue: 6px 6px 0 0 #1f3bd9;
+  --shadow-dure-jaune: 8px 8px 0 0 #ffd23f, 11px 11px 0 0 #111111;
+  --shadow-none: 0 0 0 0 transparent;
+
+  --duration-vite: 120ms;
+  --duration-normal: 200ms;
+  --duration-lente: 400ms;
+  --duration-carrousel: 6000ms;
+  --ease-affiche: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @layer base {
   html {
-    color-scheme: dark;
-    -webkit-tap-highlight-color: transparent;
-    scrollbar-color: var(--color-ink-3) var(--color-ink);
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
   }
-
   body {
+    @apply bg-creme font-sans text-base text-noir antialiased;
     min-height: 100dvh;
-    background-color: var(--color-ink);
-    color: var(--color-bone);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
-
-  /* Grain de pellicule sur toute la page, très discret. */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-    opacity: 0.05;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 180px 180px;
-  }
-
-  ::selection {
-    background: var(--color-velvet);
-    color: var(--color-bone);
-  }
-
   :focus-visible {
-    outline: 2px solid var(--color-gold);
+    outline: 3px solid var(--color-outremer);
     outline-offset: 3px;
   }
-
-  h1,
-  h2,
-  h3 {
-    text-wrap: balance;
+  ::selection {
+    background: var(--color-jaune);
+    color: var(--color-noir);
   }
-
-  p {
-    text-wrap: pretty;
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-/* Libellés en capitales condensées, comme sur la marquise d'une salle. */
-@utility marquee {
-  font-family: var(--font-marquee);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-}
+@layer components {
+  /* Fond d'une image en attente : hachures neutres, jamais de fausse affiche. */
+  .zone {
+    @apply relative overflow-hidden bg-zone;
+    background-image: repeating-linear-gradient(135deg, transparent 0 10px, var(--color-zone-2) 10px 11px);
+  }
 
-/* Rangée d'ampoules de marquise, utilisée comme séparateur. */
-@utility marquee-lights {
-  height: 8px;
-  background: radial-gradient(circle, var(--color-gold) 0 2px, transparent 2.6px) 0 50% / 18px 8px repeat-x;
-  opacity: 0.45;
+  /* Boutons */
+  .btn {
+    @apply inline-flex h-12 items-center justify-center gap-2.5 border-2 border-noir bg-creme px-5 text-[15px] leading-none font-bold whitespace-nowrap text-noir shadow-dure transition-[transform,box-shadow,background-color] duration-(--duration-vite) ease-affiche select-none;
+  }
+  .btn:hover {
+    @apply translate-x-0.5 translate-y-0.5 shadow-dure-sm;
+  }
+  .btn:active {
+    @apply translate-x-[5px] translate-y-[5px] shadow-none;
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    @apply translate-x-0 translate-y-0 cursor-not-allowed border-gris bg-zone text-gris shadow-none;
+  }
+  .btn-primary {
+    @apply bg-jaune;
+  }
+  .btn-primary:hover {
+    @apply bg-jaune-fonce;
+  }
+  .btn-noir {
+    @apply bg-noir text-creme;
+  }
+  .btn-icon {
+    @apply size-11 p-0;
+  }
+  .btn-sm {
+    @apply h-11 px-3.5 text-sm shadow-dure-sm;
+  }
+  .btn-sm:hover {
+    box-shadow: 1px 1px 0 0 #111111;
+  }
+
+  /* Lien texte */
+  .lien {
+    @apply font-semibold text-outremer underline decoration-2 underline-offset-4 hover:bg-jaune hover:text-noir hover:no-underline;
+  }
+
+  /* Plaque de salle : un genre = une salle numérotée. */
+  .plaque {
+    @apply inline-flex h-11 items-stretch border-2 border-noir bg-creme text-[15px] font-semibold text-noir transition-colors duration-(--duration-vite);
+  }
+  .plaque > .plaque-n {
+    @apply grid min-w-11 place-items-center border-r-2 border-noir bg-creme px-2 pt-0.5 font-display text-d-xs text-outremer;
+  }
+  .plaque > .plaque-t {
+    @apply grid place-items-center px-3;
+  }
+  .plaque:hover {
+    @apply bg-jaune;
+  }
+  .plaque[aria-pressed="true"] {
+    @apply bg-noir text-creme;
+  }
+  .plaque[aria-pressed="true"] > .plaque-n {
+    @apply bg-jaune text-noir;
+  }
+
+  /* Note en tuiles de fronton */
+  .tuiles {
+    @apply inline-flex items-stretch gap-0.5 align-middle;
+  }
+  .tuiles > b {
+    @apply grid place-items-center bg-noir font-display leading-none font-normal text-creme;
+  }
+  .tuiles-lg > b {
+    @apply h-11 min-w-8 px-1.5 pt-1 text-[34px];
+  }
+  .tuiles-lg > b.v {
+    @apply w-4 min-w-0 px-0;
+  }
+  .tuiles-sm > b {
+    @apply h-7 min-w-5 px-1 pt-0.5 text-[20px];
+  }
+  .tuiles-sm > b.v {
+    @apply w-2.5 min-w-0 px-0;
+  }
+  .tuiles-xs > b {
+    @apply h-6 min-w-4 px-0.5 pt-0.5 text-[17px];
+  }
+  .tuiles-xs > b.v {
+    @apply w-2 min-w-0 px-0;
+  }
+
+  /* Pastille de classement : moitié hors de l'affiche, lisible sur toute image. */
+  .pastille {
+    @apply absolute -top-2.5 -left-2.5 z-10 grid h-11 min-w-11 place-items-center border-2 border-noir bg-jaune px-2 pt-1 font-display text-[30px] leading-none text-noir shadow-dure-sm;
+  }
+
+  /* Carte film : bordure seule au repos, ombre bleue au survol ou au focus. */
+  .carte {
+    @apply relative w-[140px] shrink-0 snap-start md:w-[176px];
+  }
+  .carte-media {
+    @apply relative block aspect-[2/3] border-2 border-noir bg-zone transition-[transform,box-shadow] duration-(--duration-vite) ease-affiche;
+  }
+  .carte:hover .carte-media,
+  .carte:focus-within .carte-media {
+    @apply -translate-x-0.5 -translate-y-0.5 shadow-dure-bleue;
+  }
+  .carte-titre {
+    @apply mt-2.5 line-clamp-2 text-[15px] leading-tight font-semibold;
+  }
+  .carte-titre a:focus-visible {
+    outline-offset: 2px;
+  }
+  .carte-meta {
+    @apply mt-1.5 flex items-center justify-between text-sm text-gris;
+  }
+
+  /* Bouton favori posé sur l'affiche */
+  .fav {
+    @apply absolute top-2 right-2 z-10 grid size-11 place-items-center border-2 border-noir bg-creme text-noir transition-colors duration-(--duration-vite);
+  }
+  .fav:hover {
+    @apply bg-jaune;
+  }
+  .fav[aria-pressed="true"] {
+    @apply bg-jaune;
+  }
+  .fav[aria-pressed="true"] svg,
+  [data-fav][aria-pressed="true"] svg {
+    fill: currentColor;
+  }
+  [data-fav][aria-pressed="true"] {
+    @apply bg-jaune;
+  }
+
+  /* Affiche ou portrait absents : affiche typographique */
+  .affiche-absente {
+    @apply absolute inset-0 grid place-items-center bg-creme p-3 text-center;
+  }
+  .affiche-absente > b {
+    @apply font-display text-[28px] leading-[.9] font-normal text-noir md:text-[34px];
+  }
+  .affiche-absente > small {
+    @apply mt-2 block text-[11px] font-semibold tracking-[.08em] text-gris uppercase;
+  }
+
+  /* Rangée défilante */
+  .rangee-scroll {
+    @apply -mx-gouttiere flex snap-x snap-mandatory scroll-pl-gouttiere gap-5 overflow-x-auto scroll-smooth px-gouttiere pt-3 pb-4 md:mx-0 md:scroll-pl-0 md:gap-7 md:px-0;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .rangee-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .surtitre {
+    @apply text-[13px] font-bold tracking-[.1em] text-outremer uppercase;
+  }
+  .titre-section {
+    @apply font-display text-d-md text-noir md:text-d-lg;
+  }
+
+  .squelette {
+    @apply animate-pulse bg-zone;
+  }
+
+  /* Étiquette jaune (N°1, métier) */
+  .etiquette {
+    @apply inline-flex items-center border-2 border-noir bg-jaune px-3 pt-1.5 pb-1 font-display text-[20px] leading-none tracking-[.05em] text-noir shadow-dure-sm md:text-[22px];
+  }
+
+  /* Index du carrousel */
+  .index {
+    @apply inline-flex h-11 items-center border-2 border-noir bg-noir px-2.5 pt-1 font-display text-[26px] leading-none text-creme;
+  }
+  .index small {
+    @apply ml-0.5 text-[18px] opacity-90;
+  }
+
+  /* Titre du héros : la taille dépend de la longueur du titre (règle appliquée côté React). */
+  .hero-titre {
+    @apply font-display text-[56px] leading-[.9] text-creme md:text-d-2xl;
+    text-shadow: 4px 4px 0 #111111;
+  }
+  @media (min-width: 768px) {
+    .hero-titre {
+      text-shadow: 6px 6px 0 #111111;
+    }
+  }
+  .hero-titre--long {
+    @apply text-[44px] md:text-[88px] md:leading-[.88];
+  }
+  .hero-titre--xlong {
+    @apply line-clamp-2 text-[36px] md:text-[64px] md:leading-[.9];
+    /* line-clamp coupe ce qui dépasse la boîte : avec un interligne de 0,9, les accents des
+       capitales de la première ligne (LÉGENDE) disparaissaient. Cette marge les garde visibles. */
+    padding-top: 0.15em;
+  }
+
+  .portrait {
+    @apply relative block aspect-[2/3] border-2 border-noir bg-zone;
+  }
+
+  /* Bloc d'état (erreur, vide) */
+  .etat {
+    @apply flex flex-col gap-4 border-2 border-noir bg-creme p-5 md:flex-row md:items-center md:p-6;
+  }
+  .etat-erreur {
+    @apply border-erreur;
+  }
 }
 
 @utility scrollbar-none {
@@ -118,60 +322,11 @@
   }
 }
 
-/* Gouttière de page : contenu centré sur --page-max, mais les rangées
-   défilantes peuvent déborder jusqu'au bord de l'écran tout en restant
-   alignées sur la grille. */
-:root {
-  --gutter: 1.25rem;
-  --page-max: 1440px;
-}
-@media (width >= 48rem) {
-  :root {
-    --gutter: 2.5rem;
-  }
-}
-
-@utility px-page {
-  padding-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2 + var(--gutter)));
-}
-
-@utility scroll-px-page {
-  scroll-padding-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2 + var(--gutter)));
-}
-
 @keyframes loading-bar {
   from {
     transform: translateX(-100%);
   }
   to {
     transform: translateX(300%);
-  }
-}
-
-/* Placeholder de chargement : reflet qui glisse, sans arrondi.
-   Le reflet est un pseudo-élément déplacé par transform, animé par le compositeur : l'ancienne
-   version animait background-position et forçait à repeindre chaque carte à chaque image. */
-@utility skeleton {
-  position: relative;
-  overflow: hidden;
-  background-color: var(--color-ink-2);
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, var(--color-ink-3), transparent);
-    transform: translateX(-100%);
-    animation: var(--animate-shimmer);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }

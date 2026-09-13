@@ -55,6 +55,14 @@ export const usePerson = (id: number) =>
     enabled: Number.isInteger(id) && id > 0,
   });
 
+/** Chargée seulement à la demande (« Lire en anglais »). */
+export const usePersonBiography = (id: number, language: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ["person-biography", id, language],
+    queryFn: ({ signal }) => api.personBiography(id, language, signal),
+    enabled: enabled && Number.isInteger(id) && id > 0,
+  });
+
 /**
  * Catalogue paginé. Avec un titre, on passe par /search/movie (qui ne sait
  * filtrer que par année) : genres et note minimale sont alors appliqués sur

@@ -9,17 +9,17 @@ export function Layout() {
     <div className="flex min-h-dvh flex-col">
       <a
         href="#contenu"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-gold focus:px-4 focus:py-2 focus:text-ink"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:border-2 focus:border-noir focus:bg-jaune focus:px-4 focus:py-2 focus:font-bold focus:text-noir"
       >
         Aller au contenu
       </a>
 
       <Header />
 
-      {/* Fine barre dorée pendant le chargement d'une page à la demande. */}
+      {/* Fine barre outremer pendant le chargement d'une page à la demande. */}
       {navigation.state === "loading" ? (
-        <div className="fixed inset-x-0 top-0 z-50 h-0.5 overflow-hidden" role="progressbar" aria-label="Chargement">
-          <div className="h-full w-1/3 animate-[loading-bar_1.1s_ease-in-out_infinite] bg-gold" />
+        <div className="fixed inset-x-0 top-0 z-50 h-1 overflow-hidden" role="progressbar" aria-label="Chargement">
+          <div className="h-full w-1/3 animate-[loading-bar_1.1s_ease-in-out_infinite] bg-outremer" />
         </div>
       ) : null}
 

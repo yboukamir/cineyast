@@ -227,6 +227,10 @@ export const api = {
   person: (id: number, signal?: AbortSignal) =>
     tmdb<PersonDetail>(`/person/${id}`, { append_to_response: "movie_credits,external_ids" }, signal),
 
+  /** Biographie seule dans une autre langue, quand TMDB n'en a pas en français. */
+  personBiography: (id: number, language: string, signal?: AbortSignal) =>
+    tmdb<Pick<PersonDetail, "biography">>(`/person/${id}`, { language }, signal),
+
   search: (query: string, page: number, year: number | undefined, signal?: AbortSignal) =>
     tmdb<Paginated<MovieSummary>>("/search/movie", { query, page, primary_release_year: year }, signal),
 

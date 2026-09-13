@@ -3,10 +3,10 @@
  *
  * LinkedIn affiche l'og:image en grande carte paysage recadrée au centre : un portrait
  * TMDB brut y perdait le haut du visage. Cette fonction compose une carte au format
- * attendu : portrait entier à gauche, métier, nom et films les plus connus à droite, aux
- * couleurs de Cineyast.
+ * attendu, dans la charte « L'Affiche » : fond outremer, portrait entier dans un cadre noir
+ * à ombre jaune, métier en étiquette, nom et films les plus connus à droite.
  *
- * Appelée depuis les balises générées par api/share.js : /api/og/personne?id=287&v=1
+ * Appelée depuis les balises générées par api/share.js : /api/og/personne?id=287&v=2
  * Seul l'identifiant est lu dans l'URL. Le nom et les films viennent de TMDB (clé côté
  * serveur), pour qu'on ne puisse pas fabriquer de fausse carte au nom du site.
  *
@@ -22,17 +22,18 @@ const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p";
 const WIDTH = 1200;
 const HEIGHT = 630;
-const PORTRAIT_WIDTH = 420;
+const PAD = 56;
+const PORTRAIT_WIDTH = 328;
+const PORTRAIT_HEIGHT = 492;
 
 /** Mêmes teintes que @theme dans src/index.css. */
 const C = {
-  ink: "#0c0a09",
-  ink2: "#15110f",
-  ink3: "#211b17",
-  bone: "#efe6d4",
-  mute: "#a69d8c",
-  gold: "#c8a45a",
-  velvet: "#b52a25",
+  creme: "#FFFCF5",
+  noir: "#111111",
+  gris: "#5E5E5E",
+  zone: "#EAE6DC",
+  outremer: "#1F3BD9",
+  jaune: "#FFD23F",
 };
 
 /** Doit rester cohérent avec DEPARTMENTS dans src/lib/filmography.ts. */
@@ -57,17 +58,16 @@ export const CREATIVE_JOBS = new Set(["Director", "Screenplay", "Writer", "Story
 
 /**
  * Polices statiques en woff : Satori ne lit ni le woff2 ni les polices variables du site.
- * Chaque famille a deux sous-ensembles, latin et latin étendu (Kieślowski, Dvořák…).
+ * Chaque graisse a deux sous-ensembles, latin et latin étendu (Kieślowski, Dvořák…).
  */
 const FONT_DIR = join(process.cwd(), "api", "og", "_fonts");
 const FONT_FILES = [
-  ["Bodoni Moda", 500, "normal", "bodoni-moda-latin-500-normal.woff"],
-  ["Bodoni Moda", 500, "normal", "bodoni-moda-latin-ext-500-normal.woff"],
-  ["Bodoni Moda", 500, "italic", "bodoni-moda-latin-500-italic.woff"],
-  ["Big Shoulders Display", 600, "normal", "big-shoulders-display-latin-600-normal.woff"],
-  ["Big Shoulders Display", 600, "normal", "big-shoulders-display-latin-ext-600-normal.woff"],
-  ["Hanken Grotesk", 400, "normal", "hanken-grotesk-latin-400-normal.woff"],
-  ["Hanken Grotesk", 400, "normal", "hanken-grotesk-latin-ext-400-normal.woff"],
+  ["Bebas Neue", 400, "normal", "bebas-neue-latin-400-normal.woff"],
+  ["Bebas Neue", 400, "normal", "bebas-neue-latin-ext-400-normal.woff"],
+  ["Figtree", 600, "normal", "figtree-latin-600-normal.woff"],
+  ["Figtree", 600, "normal", "figtree-latin-ext-600-normal.woff"],
+  ["Figtree", 700, "normal", "figtree-latin-700-normal.woff"],
+  ["Figtree", 700, "normal", "figtree-latin-ext-700-normal.woff"],
 ];
 let fontsPromise;
 const loadFonts = () =>
@@ -123,60 +123,76 @@ const el = (type, style, children) => ({
   props: children === undefined || (Array.isArray(children) && children.length === 0) ? { style } : { style, children },
 });
 
-/** Bobine de film, même dessin que le logo : repli quand TMDB n'a pas de portrait. */
-function reelPlaceholder() {
-  const hole = (left, top) =>
-    el("div", { position: "absolute", left, top, width: 38, height: 38, borderRadius: 19, backgroundColor: C.ink2 }, []);
-  return el("div", { display: "flex", alignItems: "center", justifyContent: "center", width: PORTRAIT_WIDTH, height: HEIGHT, backgroundColor: C.ink2 }, [
-    el("div", { display: "flex", position: "relative", width: 160, height: 160, borderRadius: 80, backgroundColor: C.gold }, [
-      hole(99, 61), hole(80, 94), hole(42, 94), hole(23, 61), hole(42, 28), hole(80, 28),
-      el("div", { position: "absolute", left: 71, top: 71, width: 18, height: 18, borderRadius: 9, backgroundColor: C.velvet }, []),
-    ]),
-  ]);
+const initiales = (name) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0].toUpperCase())
+    .join("");
+
+/** Portrait absent : affiche typographique, comme sur le site (jamais une silhouette générique). */
+function portraitAbsent(name) {
+  return el(
+    "div",
+    { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: PORTRAIT_WIDTH, height: PORTRAIT_HEIGHT, backgroundColor: C.creme },
+    [
+      el("div", { display: "flex", fontFamily: "Bebas Neue", fontSize: 150, lineHeight: 1, color: C.noir }, initiales(name)),
+      el("div", { display: "flex", marginTop: 12, fontWeight: 700, fontSize: 17, letterSpacing: 2, textTransform: "uppercase", color: C.gris }, "Portrait indisponible"),
+    ],
+  );
 }
 
 export function card(person, portrait) {
   const department = DEPARTMENTS[person.known_for_department] ?? "";
-  // Satori ne mesure pas le texte : taille du nom par paliers de longueur, pour qu'il tienne
-  // sur une ligne (« Krzysztof Kieślowski » à 68 px passait sur deux lignes et écrasait la liste).
+  // Satori ne mesure pas le texte : taille du nom par paliers de longueur. En Bebas Neue (condensée,
+  // en capitales), un nom jusqu'à ~20 caractères tient sur une ligne ; au-delà il passe sur deux,
+  // ce qui reste lisible et laisse la place aux films (vérifié sur Weerasethakul et Henckel von
+  // Donnersmarck). Au-delà de 40 caractères, le palier le plus petit évite une troisième ligne.
   // Blancs multiples et retours à la ligne ramenés à une espace simple (données saisies à la main sur TMDB).
   const name = person.name.replace(/\s+/g, " ").trim();
-  const nameSize = name.length > 28 ? 44 : name.length > 20 ? 52 : name.length > 14 ? 64 : 84;
+  const nameSize = name.length > 40 ? 48 : name.length > 28 ? 60 : name.length > 20 ? 72 : name.length > 14 ? 88 : 120;
   const films = knownForTitles(person, name.length > 28 ? 2 : 3).map((title) => title.replace(/\s+/g, " ").trim());
-  const label = { fontFamily: "Big Shoulders Display", fontWeight: 600, textTransform: "uppercase" };
 
-  const left = portrait
-    ? el("div", { display: "flex", position: "relative", width: PORTRAIT_WIDTH, height: HEIGHT }, [
-        el("img", { width: PORTRAIT_WIDTH, height: HEIGHT, objectFit: "cover", objectPosition: "center top" }, undefined),
-        // Fondu vers le fond sur le bord droit du portrait.
-        el("div", { position: "absolute", top: 0, right: 0, width: 160, height: HEIGHT, backgroundImage: `linear-gradient(to right, rgba(12, 10, 9, 0), ${C.ink})` }, []),
-      ])
-    : reelPlaceholder();
-  if (portrait) Object.assign(left.props.children[0].props, { src: portrait, width: PORTRAIT_WIDTH, height: HEIGHT });
+  const image = portrait
+    ? { type: "img", props: { src: portrait, width: PORTRAIT_WIDTH, height: PORTRAIT_HEIGHT, style: { objectFit: "cover", objectPosition: "center top" } } }
+    : portraitAbsent(name);
 
-  return el("div", { display: "flex", width: WIDTH, height: HEIGHT, backgroundColor: C.ink, fontFamily: "Hanken Grotesk", color: C.bone }, [
-    left,
-    el("div", { display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, padding: "52px 64px 48px 44px" }, [
-      el("div", { display: "flex", alignItems: "baseline", fontFamily: "Bodoni Moda", fontWeight: 500, fontSize: 36 }, [
-        "Cine",
-        el("span", { fontStyle: "italic", color: C.gold }, "yast"),
+  // Ombre dure dessinée par deux aplats décalés : jaune puis noir, comme shadow-dure-jaune sur le site.
+  const cadre = el("div", { display: "flex", position: "relative", width: PORTRAIT_WIDTH + 22, height: PORTRAIT_HEIGHT + 22 }, [
+    el("div", { position: "absolute", left: 16, top: 16, width: PORTRAIT_WIDTH + 6, height: PORTRAIT_HEIGHT + 6, backgroundColor: C.noir }, []),
+    el("div", { position: "absolute", left: 12, top: 12, width: PORTRAIT_WIDTH + 6, height: PORTRAIT_HEIGHT + 6, backgroundColor: C.jaune }, []),
+    el("div", { display: "flex", position: "absolute", left: 0, top: 0, border: `3px solid ${C.noir}`, backgroundColor: C.zone }, [image]),
+  ]);
+
+  return el("div", { display: "flex", width: WIDTH, height: HEIGHT, padding: PAD, backgroundColor: C.outremer, fontFamily: "Figtree", fontWeight: 600, color: C.creme }, [
+    cadre,
+    el("div", { display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, marginLeft: 56 }, [
+      el("div", { display: "flex", position: "relative", alignSelf: "flex-start", paddingLeft: 8, paddingRight: 8 }, [
+        el("div", { position: "absolute", left: 0, right: 0, top: 22, height: 16, backgroundColor: C.jaune, transform: "rotate(-1.5deg)" }, []),
+        el("div", { display: "flex", fontFamily: "Bebas Neue", fontSize: 48, lineHeight: 1, color: C.creme }, "Cineyast"),
       ]),
 
       el("div", { display: "flex", flexDirection: "column" }, [
-        department ? el("div", { ...label, fontSize: 26, letterSpacing: 5, color: C.gold }, department) : null,
-        el("div", { display: "flex", fontFamily: "Bodoni Moda", fontWeight: 500, fontSize: nameSize, lineHeight: 1.02, marginTop: 10, maxWidth: 660 }, name),
-        el("div", { width: 72, height: 2, backgroundColor: C.gold, marginTop: 30, marginBottom: 26 }, []),
+        department
+          ? el(
+              "div",
+              { display: "flex", alignSelf: "flex-start", padding: "8px 16px 4px", border: `3px solid ${C.noir}`, boxShadow: `4px 4px 0 0 ${C.noir}`, backgroundColor: C.jaune, color: C.noir, fontFamily: "Bebas Neue", fontSize: 34, lineHeight: 1, letterSpacing: 1.5 },
+              department,
+            )
+          : null,
+        el("div", { display: "flex", marginTop: 20, maxWidth: 682, fontFamily: "Bebas Neue", fontSize: nameSize, lineHeight: 0.92, textShadow: `5px 5px 0 ${C.noir}` }, name),
         ...(films.length
           ? [
-              el("div", { ...label, fontSize: 20, letterSpacing: 4, color: C.mute }, "Films les plus connus"),
+              el("div", { display: "flex", marginTop: 30, fontWeight: 700, fontSize: 18, letterSpacing: 3, textTransform: "uppercase", color: C.jaune }, "Films les plus connus"),
               ...films.map((title) =>
-                el("div", { display: "flex", fontSize: 32, marginTop: 10, maxWidth: 640, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, title),
+                el("div", { display: "flex", marginTop: 8, maxWidth: 682, fontSize: 32, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, title),
               ),
             ]
-          : [el("div", { fontSize: 30, color: C.mute }, "Filmographie sur Cineyast")]),
+          : [el("div", { display: "flex", marginTop: 30, fontSize: 30 }, "Filmographie sur Cineyast")]),
       ].filter(Boolean)),
 
-      el("div", { ...label, display: "flex", fontSize: 22, letterSpacing: 4, color: C.mute }, "cineyast.com"),
+      el("div", { display: "flex", fontWeight: 700, fontSize: 22, letterSpacing: 1 }, "cineyast.com"),
     ]),
   ]);
 }
@@ -209,7 +225,7 @@ export default async function handler(req, res) {
   try {
     const [fonts, portrait] = await Promise.all([
       loadFonts(),
-      // Portrait indisponible : la carte s'affiche quand même, avec la bobine.
+      // Portrait indisponible : la carte s'affiche quand même, avec l'affiche typographique.
       person.profile_path ? fetchPortrait(person.profile_path).catch(() => null) : null,
     ]);
     const image = new ImageResponse(card(person, portrait), { width: WIDTH, height: HEIGHT, fonts });

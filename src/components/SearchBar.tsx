@@ -1,7 +1,8 @@
-// Composition reprise de la démo « Search input with icon and button » (originui, 21st.dev),
-// complétée d'un bouton d'effacement.
+// Composition reprise de la démo « Search input with icon » (originui, 21st.dev).
+// Refonte « L'Affiche » : cadre noir 2 px et ombre dure ; au focus, le champ s'enfonce
+// et prend le contour outremer. Entrée lance la recherche.
 import { useId, type Ref } from "react";
-import { ArrowRight, Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,8 @@ interface SearchBarProps {
   placeholder?: string;
   label?: string;
   autoFocus?: boolean;
+  /** Affiche l'indice du raccourci clavier « / ». */
+  shortcut?: boolean;
   className?: string;
   inputClassName?: string;
   inputRef?: Ref<HTMLInputElement>;
@@ -22,8 +25,9 @@ export function SearchBar({
   onChange,
   onSubmit,
   placeholder = "Rechercher un film…",
-  label = "Rechercher un film par titre",
+  label = "Rechercher un film",
   autoFocus,
+  shortcut = false,
   className,
   inputClassName,
   inputRef,
@@ -33,7 +37,14 @@ export function SearchBar({
   return (
     <form
       role="search"
-      className={cn("relative", className)}
+      className={cn(
+        // text-noir : la loupe hérite de currentColor et resterait crème, donc invisible, sur le bandeau outremer.
+        "flex h-12 items-center gap-2.5 border-2 border-noir bg-blanc px-3.5 text-noir shadow-dure-sm",
+        "transition-[transform,box-shadow] duration-(--duration-vite)",
+        "focus-within:translate-x-0.5 focus-within:translate-y-0.5 focus-within:shadow-none",
+        "has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-[3px] has-[input:focus-visible]:outline-outremer has-[input:focus-visible]:outline-solid",
+        className,
+      )}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit?.(value.trim());
@@ -42,6 +53,7 @@ export function SearchBar({
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
+      <Search className="size-[18px] shrink-0" strokeWidth={2.4} aria-hidden />
       <Input
         id={id}
         ref={inputRef}
@@ -52,28 +64,13 @@ export function SearchBar({
         autoFocus={autoFocus}
         autoComplete="off"
         enterKeyHint="search"
-        className={cn("peer ps-10 pe-20", inputClassName)}
+        className={cn("h-full flex-1", inputClassName)}
       />
-      <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-mute transition-colors peer-focus-visible:text-gold">
-        <Search className="size-4" aria-hidden />
-      </div>
-      {value ? (
-        <button
-          type="button"
-          onClick={() => onChange("")}
-          aria-label="Effacer la recherche"
-          className="absolute inset-y-0 end-10 flex w-9 items-center justify-center text-mute transition-colors hover:text-bone"
-        >
-          <X className="size-4" aria-hidden />
-        </button>
+      {shortcut ? (
+        <kbd aria-hidden className="border-2 border-filet px-1.5 py-0.5 text-xs font-bold text-gris">
+          /
+        </kbd>
       ) : null}
-      <button
-        type="submit"
-        aria-label="Lancer la recherche"
-        className="absolute inset-y-0 end-0 flex w-10 items-center justify-center text-mute transition-colors hover:text-gold"
-      >
-        <ArrowRight className="size-4" aria-hidden />
-      </button>
     </form>
   );
 }

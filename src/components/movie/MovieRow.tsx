@@ -1,13 +1,11 @@
 import { useId } from "react";
 import { Link } from "react-router";
-import { ArrowRight } from "lucide-react";
-import { Scroller } from "@/components/ui/scroller";
 import { MovieCard } from "@/components/movie/MovieCard";
-import { ErrorState, PosterSkeleton } from "@/components/States";
+import { EmptyState, ErrorState, PosterSkeleton } from "@/components/States";
+import { ScrollerArrows, useScroller } from "@/components/ui/scroller";
 import { TmdbError, type MovieSummary } from "@/lib/tmdb";
 
-const ITEM = "w-[40vw] max-w-52 shrink-0 snap-start sm:w-44 md:w-48 lg:w-52";
-const SIZES = "(min-width: 1024px) 208px, (min-width: 768px) 192px, (min-width: 640px) 176px, 40vw";
+const SIZES = "(min-width: 768px) 176px, 140px";
 
 /** Sous-ensemble d'un résultat TanStack Query ; permet aussi de passer des données déjà chargées. */
 export interface RowSource {
@@ -30,49 +28,60 @@ export interface MovieRowProps {
 export function MovieRow({ eyebrow, title, query, moreHref, ranked = false }: MovieRowProps) {
   const headingId = useId();
   const movies = query.data?.results ?? [];
+  const empty = !query.isPending && !query.isError && movies.length === 0;
+  const { ref, atStart, atEnd, page } = useScroller<HTMLDivElement>([query.isPending, query.isError, movies.length]);
 
   // Clé absente : l'explication est déjà affichée en haut de page, inutile de la répéter à chaque rangée.
   if (query.error instanceof TmdbError && query.error.code === "missing_api_key") return null;
 
   return (
-    <section aria-labelledby={headingId} className="py-8 md:py-10">
-      <div className="px-page mb-5 flex items-end justify-between gap-4">
+    <section aria-labelledby={headingId} className="mx-auto max-w-page px-gouttiere pt-10 md:px-gouttiere-lg md:pt-14">
+      <div className="mb-2 flex items-end justify-between gap-4 md:mb-3">
         <div>
-          {eyebrow ? <p className="marquee text-xs text-gold">{eyebrow}</p> : null}
-          <h2 id={headingId} className="mt-1 font-display text-2xl md:text-3xl">
+          {eyebrow ? <p className="surtitre mb-1">{eyebrow}</p> : null}
+          <h2 id={headingId} className="titre-section">
             {title}
           </h2>
         </div>
-        {moreHref ? (
-          <Link
-            to={moreHref}
-            className="marquee inline-flex shrink-0 items-center gap-1.5 pb-1 text-xs text-mute transition-colors hover:text-gold"
-          >
-            Tout voir <ArrowRight className="size-3.5" aria-hidden />
-          </Link>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {moreHref ? (
+            <Link to={moreHref} className="btn btn-sm">
+              Tout voir
+            </Link>
+          ) : null}
+          {!query.isError && !empty ? <ScrollerArrows atStart={atStart} atEnd={atEnd} page={page} /> : null}
+        </div>
       </div>
 
       {query.isError ? (
-        <div className="px-page">
-          <ErrorState error={query.error} onRetry={() => void query.refetch()} />
-        </div>
+        <ErrorState error={query.error} what="cette rangée" onRetry={() => void query.refetch()} className="mt-3" />
+      ) : empty ? (
+        <EmptyState
+          title="Aucun film dans cette rangée pour le moment."
+          action={
+            <Link to="/explorer" className="btn btn-sm">
+              Explorer le catalogue
+            </Link>
+          }
+          className="mt-3"
+        >
+          Revenez plus tard ou explorez le catalogue.
+        </EmptyState>
       ) : (
-        <Scroller label={title} className="px-page scroll-px-page snap-x snap-mandatory">
-          <ul className="flex w-max gap-4 pb-2 md:gap-5">
-            {query.isPending
-              ? Array.from({ length: 8 }, (_, i) => (
-                  <li key={i} className={ITEM}>
-                    <PosterSkeleton />
-                  </li>
-                ))
-              : movies.map((movie, i) => (
-                  <li key={movie.id} className={ITEM}>
-                    <MovieCard movie={movie} sizes={SIZES} rank={ranked ? i + 1 : undefined} />
-                  </li>
-                ))}
-          </ul>
-        </Scroller>
+        <div
+          ref={ref}
+          role="region"
+          tabIndex={0}
+          aria-label={`${title}, rangée défilante`}
+          aria-busy={query.isPending || undefined}
+          className="rangee-scroll"
+        >
+          {query.isPending
+            ? Array.from({ length: 8 }, (_, i) => <PosterSkeleton key={i} />)
+            : movies.map((movie, i) => (
+                <MovieCard key={movie.id} movie={movie} sizes={SIZES} rank={ranked ? i + 1 : undefined} />
+              ))}
+        </div>
       )}
     </section>
   );

@@ -1,19 +1,25 @@
+import { Link } from "react-router";
 import { EmptyState } from "@/components/States";
-import { TicketLink } from "@/components/ui/ticket-button";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export default function NotFoundPage() {
   useDocumentTitle("Page introuvable");
   return (
-    <div className="px-page pt-28">
-      <EmptyState title="Cette bobine est introuvable.">
-        La page demandée n'existe pas ou a été déplacée.
-        <div className="mt-6 flex justify-center gap-3">
-          <TicketLink to="/">Accueil</TicketLink>
-          <TicketLink to="/explorer" variant="ghost">
-            Explorer
-          </TicketLink>
-        </div>
+    <div className="mx-auto max-w-page px-gouttiere pt-10 md:px-gouttiere-lg">
+      <EmptyState
+        title="Cette page n'existe pas."
+        action={
+          <>
+            <Link to="/" className="btn btn-primary btn-sm">
+              Accueil
+            </Link>
+            <Link to="/explorer" className="btn btn-sm">
+              Explorer
+            </Link>
+          </>
+        }
+      >
+        Le lien est peut-être erroné, ou la page a été déplacée.
       </EmptyState>
     </div>
   );

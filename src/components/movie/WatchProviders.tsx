@@ -1,12 +1,22 @@
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { EmptyState } from "@/components/States";
 import { releaseDateLong } from "@/lib/format";
 import type { WatchAvailability } from "@/lib/tmdb";
+import { cn } from "@/lib/utils";
 import { buildGroups, type WatchGroup } from "@/lib/watchProviders";
 
 const LOGO = "https://image.tmdb.org/t/p/w92";
 /** Au-delà, les offres sont repliées : Fight Club en compte 9 en abonnement et 9 en location. */
 const VISIBLE = 6;
+/** Carré de légende : jaune pour ce qui est inclus ou gratuit, outremer pour ce qui se paie à l'acte. */
+const LEGENDE: Record<string, string> = {
+  flatrate: "bg-jaune",
+  free: "bg-jaune",
+  ads: "bg-jaune",
+  "rent-buy": "bg-outremer",
+  rent: "bg-outremer",
+  buy: "bg-outremer",
+};
 
 function ProviderGroup({ group }: { group: WatchGroup }) {
   const [expanded, setExpanded] = useState(false);
@@ -16,28 +26,28 @@ function ProviderGroup({ group }: { group: WatchGroup }) {
 
   return (
     <div>
-      <h3 className="marquee text-[11px] text-mute">{group.label}</h3>
-      <ul id={listId} className="mt-3 flex flex-wrap gap-2">
+      <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
+        <span aria-hidden className={cn("size-3 border-2 border-noir", LEGENDE[group.key] ?? "bg-jaune")} />
+        {group.label}
+      </h3>
+      <ul id={listId} className="m-0 flex list-none flex-wrap gap-3 p-0">
         {shown.map((provider) => (
-          <li
-            key={provider.provider_id}
-            className="flex h-10 items-center gap-2.5 border border-line-strong bg-ink-2/60 pr-3"
-          >
+          <li key={provider.provider_id} className="inline-flex h-12 items-center gap-2.5 border-2 border-noir bg-creme pr-3.5">
             {provider.logo_path ? (
               // Le nom est écrit à côté : le logo est décoratif pour les lecteurs d'écran.
               <img
                 src={`${LOGO}${provider.logo_path}`}
                 alt=""
-                width={40}
-                height={40}
+                width={44}
+                height={44}
                 loading="lazy"
                 decoding="async"
-                className="size-10 shrink-0 object-cover"
+                className="size-11 shrink-0 border-r-2 border-noir object-cover"
               />
             ) : (
-              <span aria-hidden className="size-10 shrink-0 bg-ink-3" />
+              <span aria-hidden className="zone size-11 shrink-0 border-r-2 border-noir" />
             )}
-            <span className="text-sm leading-tight text-bone/90">{provider.provider_name}</span>
+            <span className="text-[15px] font-semibold">{provider.provider_name}</span>
           </li>
         ))}
         {hidden > 0 ? (
@@ -47,7 +57,7 @@ function ProviderGroup({ group }: { group: WatchGroup }) {
               onClick={() => setExpanded((open) => !open)}
               aria-expanded={expanded}
               aria-controls={listId}
-              className="marquee flex h-10 items-center border border-dashed border-line-strong px-3 text-[11px] text-mute transition-colors hover:border-gold hover:text-gold"
+              className="btn h-12 shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-jaune"
             >
               {expanded ? "Réduire" : `+ ${hidden} autre${hidden > 1 ? "s" : ""}`}
             </button>
@@ -63,32 +73,25 @@ function NoOffer({ releaseDate }: { releaseDate?: string }) {
   const days = released && !Number.isNaN(released.getTime()) ? (Date.now() - released.getTime()) / 86_400_000 : null;
   const date = releaseDateLong(releaseDate);
 
-  let context = "";
+  let context = "Ni abonnement, ni location, ni achat n'est référencé pour ce film.";
   if (days !== null && days < 0) context = `Sa sortie en salle est prévue le ${date}.`;
   else if (days !== null && days <= 365)
     context = `Sorti en salle le ${date} : en France, un film arrive généralement en location quelques mois après sa sortie au cinéma, et plus tard en abonnement.`;
 
   return (
-    <div className="mt-5 border-l-2 border-line-strong pl-4">
-      <p className="text-bone/90">Aucune offre de streaming, de location ou d'achat n'est référencée en France pour le moment.</p>
-      {context ? <p className="mt-1 text-sm text-mute">{context}</p> : null}
-    </div>
+    <EmptyState mark="Pas de séance" title="Aucune offre de streaming en France pour le moment.">
+      {context}
+    </EmptyState>
   );
 }
 
-export function WatchProviders({
-  availability,
-  releaseDate,
-}: {
-  availability?: WatchAvailability;
-  releaseDate?: string;
-}) {
+export function WatchProviders({ availability, releaseDate }: { availability?: WatchAvailability; releaseDate?: string }) {
   const groups = availability ? buildGroups(availability) : [];
 
   return (
-    <>
+    <div className="mt-5">
       {groups.length ? (
-        <div className="mt-5 space-y-6">
+        <div className="grid gap-8 md:grid-cols-2">
           {groups.map((group) => (
             <ProviderGroup key={group.key} group={group} />
           ))}
@@ -96,31 +99,14 @@ export function WatchProviders({
       ) : (
         <NoOffer releaseDate={releaseDate} />
       )}
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-xs text-mute">
-        {groups.length && availability?.link ? (
-          <a
-            href={availability.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="marquee inline-flex items-center gap-1.5 transition-colors hover:text-gold"
-          >
-            Accéder aux offres sur TMDB <ExternalLink className="size-3.5" aria-hidden />
-          </a>
-        ) : null}
-        {/* Attribution exigée par TMDB pour utiliser ces données. */}
-        <p>
-          Disponibilités fournies par{" "}
-          <a
-            href="https://www.justwatch.com/fr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-bone underline decoration-gold/50 underline-offset-4 hover:text-gold"
-          >
-            JustWatch
-          </a>
-        </p>
-      </div>
-    </>
+      {/* Attribution exigée par TMDB pour utiliser ces données. */}
+      <p className="mt-5 text-sm text-gris">
+        Disponibilités fournies par{" "}
+        <a href="https://www.justwatch.com/fr" target="_blank" rel="noopener noreferrer" className="lien">
+          JustWatch
+        </a>
+        .
+      </p>
+    </div>
   );
 }

@@ -1,33 +1,24 @@
 // Adapté de « Scroller » (diceui) — catalogue 21st.dev.
-// Conservé : bords en fondu (mask-image) selon la position de défilement.
-// Modifié : horizontal uniquement, sans dépendance Radix, flèches qui avancent
-// d'une « page » avec défilement fluide, masquées sur écran tactile.
+// Conservé : la détection des bords selon la position de défilement et l'avance « page par page ».
+// Refonte « L'Affiche » : plus de fondu ni de flèches superposées au contenu. Les flèches se
+// placent là où la maquette les veut (en-tête de rangée) et se désactivent en bout de course.
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ScrollerProps extends React.ComponentProps<"div"> {
-  /** Largeur du fondu sur les bords, en px. */
-  fade?: number;
-  withNavigation?: boolean;
-  label?: string;
-}
-
-export function Scroller({ className, fade = 48, withNavigation = true, label, style, children, ...props }: ScrollerProps) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [edges, setEdges] = React.useState({ left: false, right: false });
+/** `deps` : à fournir quand le conteneur défilant apparaît ou change de contenu après le premier rendu. */
+export function useScroller<T extends HTMLElement>(deps: React.DependencyList = []) {
+  const ref = React.useRef<T>(null);
+  const [edges, setEdges] = React.useState({ atStart: true, atEnd: true });
 
   React.useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-
     const update = () => {
-      const left = el.scrollLeft > 1;
-      const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
-      el.dataset.fade = left && right ? "both" : left ? "left" : right ? "right" : "none";
-      setEdges((prev) => (prev.left === left && prev.right === right ? prev : { left, right }));
+      const atStart = el.scrollLeft <= 1;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
+      setEdges((prev) => (prev.atStart === atStart && prev.atEnd === atEnd ? prev : { atStart, atEnd }));
     };
-
     update();
     el.addEventListener("scroll", update, { passive: true });
     const ro = new ResizeObserver(update);
@@ -36,54 +27,53 @@ export function Scroller({ className, fade = 48, withNavigation = true, label, s
       el.removeEventListener("scroll", update);
       ro.disconnect();
     };
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const page = React.useCallback((direction: -1 | 1) => {
+    const el = ref.current;
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: reduced ? "auto" : "smooth" });
   }, []);
 
-  const page = (direction: -1 | 1) => {
-    const el = ref.current;
-    if (el) el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: "smooth" });
-  };
+  return { ref, ...edges, page };
+}
 
+interface ScrollerArrowsProps {
+  atStart: boolean;
+  atEnd: boolean;
+  page: (direction: -1 | 1) => void;
+  className?: string;
+}
+
+/** Flèches de rangée, réservées au desktop : au doigt, la rangée défile directement. */
+export function ScrollerArrows({ atStart, atEnd, page, className }: ScrollerArrowsProps) {
+  const arrow = "btn btn-icon shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-jaune";
   return (
-    <div className="group/scroller relative">
-      <div
-        ref={ref}
-        role="region"
-        aria-label={label}
-        tabIndex={label ? 0 : undefined}
-        style={{ "--fade": `${fade}px`, ...style } as React.CSSProperties}
-        className={cn(
-          "scrollbar-none overflow-x-auto overscroll-x-contain",
-          "data-[fade=left]:[mask-image:linear-gradient(to_right,transparent,#000_var(--fade))]",
-          "data-[fade=right]:[mask-image:linear-gradient(to_left,transparent,#000_var(--fade))]",
-          "data-[fade=both]:[mask-image:linear-gradient(to_right,transparent,#000_var(--fade),#000_calc(100%-var(--fade)),transparent)]",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </div>
+    <div role="group" aria-label="Faire défiler la rangée" className={cn("hidden md:flex", className)}>
+      <button type="button" className={arrow} onClick={() => page(-1)} disabled={atStart} aria-label="Précédent">
+        <ChevronLeft className="size-5" strokeWidth={2.6} aria-hidden />
+      </button>
+      <button type="button" className={cn(arrow, "-ml-0.5")} onClick={() => page(1)} disabled={atEnd} aria-label="Suivant">
+        <ChevronRight className="size-5" strokeWidth={2.6} aria-hidden />
+      </button>
+    </div>
+  );
+}
 
-      {withNavigation &&
-        ([-1, 1] as const).map((direction) => {
-          const visible = direction === -1 ? edges.left : edges.right;
-          const Icon = direction === -1 ? ChevronLeft : ChevronRight;
-          return (
-            <button
-              key={direction}
-              type="button"
-              onClick={() => page(direction)}
-              aria-label={direction === -1 ? "Faire défiler vers la gauche" : "Faire défiler vers la droite"}
-              tabIndex={-1}
-              className={cn(
-                "absolute top-[38%] z-10 hidden size-11 -translate-y-1/2 items-center justify-center border border-line-strong bg-ink/85 text-bone backdrop-blur transition-opacity hover:border-gold hover:text-gold [@media(hover:hover)]:flex",
-                direction === -1 ? "left-2" : "right-2",
-                visible ? "opacity-0 group-hover/scroller:opacity-100" : "pointer-events-none !opacity-0",
-              )}
-            >
-              <Icon className="size-5" />
-            </button>
-          );
-        })}
+/** Conteneur défilant simple, sans flèches. */
+export function Scroller({ className, label, children, ...props }: React.ComponentProps<"div"> & { label?: string }) {
+  const { ref } = useScroller<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      role="region"
+      aria-label={label}
+      tabIndex={label ? 0 : undefined}
+      className={cn("scrollbar-none overflow-x-auto overscroll-x-contain", className)}
+      {...props}
+    >
+      {children}
     </div>
   );
 }

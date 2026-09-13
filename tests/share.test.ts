@@ -65,7 +65,7 @@ describe("aperçu d'une page personne", () => {
     const lines = tags(String((await call("type=personne&slug=287-brad-pitt")).body));
     expect(content(lines, "og:title")).toBe("Brad Pitt");
     expect(content(lines, "og:type")).toBe("profile");
-    expect(decode(content(lines, "og:image"))).toBe("https://cineyast.com/api/og/personne?id=287&v=1");
+    expect(decode(content(lines, "og:image"))).toBe("https://cineyast.com/api/og/personne?id=287&v=2");
     expect(content(lines, "og:image:width")).toBe("1200");
     expect(content(lines, "og:image:height")).toBe("630");
     expect(content(lines, "twitter:card")).toBe("summary_large_image");

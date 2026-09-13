@@ -1,10 +1,9 @@
 import { useId } from "react";
-import { RotateCcw } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Rating } from "@/components/ui/rating";
-import { SelectorChips } from "@/components/ui/selector-chips";
-import { score } from "@/lib/format";
+import { numeroDeSalle } from "@/lib/salles";
 import type { CatalogFilters, Genre, SortKey } from "@/lib/tmdb";
+import { cn } from "@/lib/utils";
 
 export const SORT_OPTIONS: { slug: string; value: SortKey; label: string }[] = [
   { slug: "popularite", value: "popularity.desc", label: "Popularité" },
@@ -15,6 +14,8 @@ export const SORT_OPTIONS: { slug: string; value: SortKey; label: string }[] = [
 
 const FIRST_YEAR = 1900;
 const YEARS = Array.from({ length: new Date().getFullYear() + 2 - FIRST_YEAR }, (_, i) => new Date().getFullYear() + 1 - i);
+/** Note minimale en tuiles : 0 = toutes les notes. */
+const NOTES = [0, 5, 6, 7, 8, 9];
 
 interface FiltersProps {
   filters: CatalogFilters;
@@ -26,101 +27,123 @@ interface FiltersProps {
 }
 
 export function Filters({ filters, genres, searchMode, onChange, onReset, activeCount }: FiltersProps) {
-  const ids = { sort: useId(), year: useId(), rating: useId(), genres: useId() };
+  const ids = { sort: useId(), year: useId(), note: useId(), sortHelp: useId() };
+  const toggleGenre = (id: number) =>
+    onChange({ genres: filters.genres.includes(id) ? filters.genres.filter((g) => g !== id) : [...filters.genres, id] });
 
   return (
-    <div className="space-y-8">
-      <div>
-        <label htmlFor={ids.sort} className="marquee text-xs text-mute">
-          Trier par
-        </label>
-        <NativeSelect
-          id={ids.sort}
-          className="mt-2"
-          value={filters.sort}
-          disabled={searchMode}
-          onChange={(e) => onChange({ sort: e.target.value as SortKey })}
-        >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </NativeSelect>
-        {searchMode ? <p className="mt-2 text-xs text-mute">Pendant une recherche, les films sont classés par pertinence.</p> : null}
-      </div>
-
-      <div>
-        <label htmlFor={ids.year} className="marquee text-xs text-mute">
-          Année de sortie
-        </label>
-        <NativeSelect
-          id={ids.year}
-          className="mt-2"
-          value={filters.year ?? ""}
-          onChange={(e) => onChange({ year: e.target.value ? Number(e.target.value) : undefined })}
-        >
-          <option value="">Toutes les années</option>
-          {YEARS.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </NativeSelect>
-      </div>
-
-      <div>
-        <div className="flex items-baseline justify-between">
-          <label htmlFor={ids.rating} className="marquee text-xs text-mute">
-            Note minimale
-          </label>
-          <span className="font-display text-lg text-gold" aria-hidden>
-            {filters.minRating ? `${score(filters.minRating)}+` : "Toutes"}
-          </span>
-        </div>
-        <input
-          id={ids.rating}
-          type="range"
-          min={0}
-          max={9}
-          step={0.5}
-          value={filters.minRating}
-          onChange={(e) => onChange({ minRating: Number(e.target.value) })}
-          aria-valuetext={filters.minRating ? `${score(filters.minRating)} sur 10 minimum` : "Toutes les notes"}
-          className="mt-3 w-full cursor-pointer accent-[var(--color-gold)]"
-        />
-        <Rating value={filters.minRating} size="sm" className="mt-2" label={`Note minimale : ${filters.minRating} sur 10`} />
-      </div>
-
-      <div>
-        <p id={ids.genres} className="marquee text-xs text-mute">
-          Genres
-        </p>
-        <p className="mt-1 text-xs text-mute/80">Les films doivent combiner tous les genres cochés.</p>
+    <div className="grid gap-6 border-[3px] border-noir bg-creme p-4 md:p-6">
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="surtitre mb-1 p-0">Genres</legend>
+        <p className="mb-3 text-sm text-gris">Les films doivent combiner toutes les salles choisies.</p>
         {genres ? (
-          <SelectorChips
-            aria-labelledby={ids.genres}
-            className="mt-3"
-            options={genres.map((g) => ({ value: g.id, label: g.name }))}
-            value={filters.genres}
-            onChange={(next) => onChange({ genres: next })}
-          />
+          <div className="flex flex-wrap gap-3">
+            {genres.map((genre) => (
+              <button
+                key={genre.id}
+                type="button"
+                className="plaque"
+                aria-pressed={filters.genres.includes(genre.id)}
+                onClick={() => toggleGenre(genre.id)}
+              >
+                <span className="plaque-n" aria-hidden>
+                  {numeroDeSalle(genres, genre.id)}
+                </span>
+                <span className="plaque-t">{genre.name}</span>
+              </button>
+            ))}
+          </div>
         ) : (
-          <div className="mt-3 flex flex-wrap gap-2" aria-hidden>
-            {Array.from({ length: 10 }, (_, i) => (
-              <div key={i} className="skeleton h-9 w-20" />
+          <div className="flex flex-wrap gap-3" aria-hidden>
+            {Array.from({ length: 12 }, (_, i) => (
+              <div key={i} className="squelette h-11 w-28" />
             ))}
           </div>
         )}
+      </fieldset>
+
+      <div className="grid gap-6 md:grid-cols-[minmax(0,14rem)_auto_minmax(0,14rem)] md:items-start md:gap-10">
+        <div>
+          <label htmlFor={ids.year} className="surtitre mb-2 block">
+            Année de sortie
+          </label>
+          <NativeSelect
+            id={ids.year}
+            value={filters.year ?? ""}
+            onChange={(e) => onChange({ year: e.target.value ? Number(e.target.value) : undefined })}
+          >
+            <option value="">Toutes les années</option>
+            {YEARS.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+
+        <fieldset className="m-0 border-0 p-0">
+          <legend className="surtitre mb-2 p-0">Note minimale</legend>
+          <div className="flex flex-wrap gap-2">
+            {NOTES.map((note) => (
+              <label key={note} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name={ids.note}
+                  className="peer sr-only"
+                  checked={filters.minRating === note}
+                  onChange={() => onChange({ minRating: note })}
+                />
+                <span
+                  className={cn(
+                    "grid h-11 min-w-11 place-items-center border-2 border-noir bg-creme transition-colors duration-(--duration-vite) hover:bg-jaune",
+                    "peer-checked:bg-noir peer-checked:text-creme",
+                    "peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-[3px] peer-focus-visible:outline-outremer peer-focus-visible:outline-solid",
+                    note ? "px-2 pt-1 font-display text-[26px] leading-none" : "px-3 text-[15px] font-semibold",
+                  )}
+                >
+                  {note ? (
+                    <>
+                      {note}
+                      <span className="sr-only"> et plus sur 10</span>
+                    </>
+                  ) : (
+                    "Toutes"
+                  )}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div>
+          <label htmlFor={ids.sort} className="surtitre mb-2 block">
+            Trier par
+          </label>
+          <NativeSelect
+            id={ids.sort}
+            value={filters.sort}
+            disabled={searchMode}
+            aria-describedby={searchMode ? ids.sortHelp : undefined}
+            onChange={(e) => onChange({ sort: e.target.value as SortKey })}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </NativeSelect>
+          {searchMode ? (
+            <p id={ids.sortHelp} className="mt-2 text-sm text-gris">
+              Pendant une recherche, les films sont classés par pertinence.
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {activeCount > 0 ? (
-        <button
-          type="button"
-          onClick={onReset}
-          className="marquee inline-flex items-center gap-2 text-xs text-mute transition-colors hover:text-gold"
-        >
-          <RotateCcw className="size-3.5" aria-hidden /> Réinitialiser les filtres
+        <button type="button" onClick={onReset} className="btn btn-sm justify-self-start">
+          <RotateCw className="size-[18px]" strokeWidth={2.4} aria-hidden />
+          Réinitialiser les filtres
         </button>
       ) : null}
     </div>

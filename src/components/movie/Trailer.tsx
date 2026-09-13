@@ -12,7 +12,7 @@ export function Trailer({ video, title, className }: { video: Video; title: stri
   const key = encodeURIComponent(video.key);
 
   return (
-    <div className={cn("relative aspect-video overflow-hidden bg-ink-2 ring-1 ring-line", className)}>
+    <div className={cn("zone aspect-video border-[3px] border-noir bg-noir", className)}>
       {playing ? (
         <iframe
           src={`https://www.youtube-nocookie.com/embed/${key}?autoplay=1&rel=0`}
@@ -26,25 +26,20 @@ export function Trailer({ video, title, className }: { video: Video; title: stri
         <button
           type="button"
           onClick={() => setPlaying(true)}
-          className="group absolute inset-0"
+          className="group absolute inset-0 grid size-full cursor-pointer place-items-center"
         >
           <img
             src={`https://i.ytimg.com/vi/${key}/hqdefault.jpg`}
             alt=""
             loading="lazy"
             decoding="async"
-            className="size-full object-cover opacity-70 transition-opacity duration-500 group-hover:opacity-90"
+            className="absolute inset-0 size-full object-cover"
           />
-          <span className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
-          <span className="absolute inset-0 grid place-items-center">
-            <span className="flex size-16 items-center justify-center bg-velvet text-bone ring-1 ring-velvet-bright transition-transform duration-300 group-hover:scale-110 md:size-20">
-              <Play className="size-7 translate-x-0.5 fill-current" aria-hidden />
-            </span>
-          </span>
           {/* Le nom accessible reprend le texte visible (commande vocale : « cliquer sur … ») et le complète. */}
-          <span className="marquee absolute bottom-4 left-4 text-left text-xs text-bone/85">
-            <span className="sr-only">Lire la bande-annonce de {title} : </span>
-            {video.name}
+          <span className="relative inline-flex h-14 items-center gap-3 border-2 border-noir bg-jaune px-6 text-[15px] font-bold text-noir shadow-dure transition-[transform,box-shadow] duration-(--duration-vite) group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-dure-sm">
+            <Play className="size-5 fill-current" aria-hidden />
+            Lire la bande-annonce
+            <span className="sr-only"> de {title} (YouTube)</span>
           </span>
         </button>
       )}

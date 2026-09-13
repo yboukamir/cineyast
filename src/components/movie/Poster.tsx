@@ -1,4 +1,3 @@
-import { Film } from "lucide-react";
 import { posterSrcSet, posterUrl } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 
@@ -11,13 +10,13 @@ interface PosterProps {
   className?: string;
 }
 
+/** Affiche TMDB ; sans affiche, une affiche typographique (jamais une image générique). Le parent est positionné. */
 export function Poster({ path, title, sizes, eager = false, className }: PosterProps) {
   if (!path) {
     return (
-      <div className={cn("flex size-full flex-col items-center justify-center gap-3 bg-ink-2 p-4 text-center", className)}>
-        <Film className="size-7 text-gold/50" strokeWidth={1.25} aria-hidden />
-        <span className="line-clamp-3 font-display text-sm italic text-bone/70">{title}</span>
-        <span className="marquee text-[10px] text-mute">Affiche indisponible</span>
+      <div className={cn("affiche-absente content-center", className)}>
+        <b className="line-clamp-4">{title}</b>
+        <small>Affiche indisponible</small>
       </div>
     );
   }
@@ -33,7 +32,7 @@ export function Poster({ path, title, sizes, eager = false, className }: PosterP
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={eager ? "high" : undefined}
-      className={cn("size-full bg-ink-2 object-cover", className)}
+      className={cn("absolute inset-0 size-full object-cover", className)}
     />
   );
 }

@@ -13,11 +13,11 @@ Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de 
 
 ![Page d'accueil de Cineyast : carrousel des tendances de la semaine](docs/capture-accueil.jpg)
 
-*Accueil du site en production — les tendances de la semaine dans un carrousel « pellicule », données réelles de l'API TMDB.*
+*Accueil — le film n°1 des tendances de la semaine : image cadrée, bandeau outremer et affiche qui chevauche la couture. Données réelles de l'API TMDB.*
 
 ![Fiche détaillée du film Fight Club : affiche, note, réalisation et bande-annonce](docs/capture-fiche.jpg)
 
-*Fiche film en production — note, classification française, casting, bande-annonce et recommandations.*
+*Fiche film — classification française, genres en plaques de salle, note en tuiles, réalisation et bande-annonce.*
 
 ## Stack
 
@@ -27,23 +27,25 @@ Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de 
 | Routage | React Router (pages chargées à la demande) |
 | Données | TanStack Query (cache, pagination infinie) |
 | Animations | Motion |
-| Polices | Bodoni Moda · Big Shoulders Display · Hanken Grotesk, auto-hébergées via Fontsource |
+| Polices | Bebas Neue (titres, chiffres, logo) · Figtree (texte), auto-hébergées via Fontsource |
+| Design | Charte « L'Affiche » : maquette de Yassine Boukamir (outremer, jaune, crème, ombres dures, angles vifs) |
 | Build | Vite |
 | Production | Vercel (fonction serverless pour le proxy TMDB) — [cineyast.com](https://cineyast.com) |
 
 ### Composants issus du catalogue 21st.dev
 
-Récupérés via le serveur MCP 21st.dev (Magic), puis adaptés à la charte et aux besoins :
+Récupérés via le serveur MCP 21st.dev (Magic). Depuis la refonte « L'Affiche », leur **fonctionnement** est
+conservé et leur **apparence** suit la maquette :
 
-| Composant (auteur) | Fichier | Adaptations principales |
+| Composant (auteur) | Fichier | Conservé · adapté |
 | --- | --- | --- |
-| Hero Carousel (crafterui) | `src/components/ui/hero-carousel.tsx` | affiche + backdrop, molette verticale rendue à la page, clic = fiche |
-| Rating (haydenbleasel) | `src/components/ui/rating.tsx` | lecture seule, note /10 → 5 étoiles partielles, libellé accessible |
-| Input + démo recherche (originui) | `src/components/ui/input.tsx`, `src/components/SearchBar.tsx` | bouton effacer, rôle `search` |
-| Selector Chips (preetsuthar17) | `src/components/ui/selector-chips.tsx` | contrôlé, générique, sans animation de largeur |
-| Movie Pass Button (radiumcoders) | `src/components/ui/ticket-button.tsx` | encoches par masque CSS (fonctionne sur image), variantes, lien |
-| Scroller (diceui) | `src/components/ui/scroller.tsx` | horizontal, sans Radix, flèches « page par page » |
-| Reveal on hover (youcefbnm) | `src/components/ui/reveal-on-hover.tsx` | révélation aussi au focus clavier |
+| Hero Carousel (crafterui) | `src/components/ui/hero-carousel.tsx` | lecture auto avec pause au survol et au focus, clavier, geste horizontal · rendu de la maquette (image cadrée, bandeau outremer), fondu et balayage au doigt |
+| Rating (haydenbleasel) | `src/components/ui/rating.tsx` | étoiles partielles à la décimale, libellé accessible unique · étoiles jaunes à contour noir |
+| Input + démo recherche (originui) | `src/components/ui/input.tsx`, `src/components/SearchBar.tsx` | champ `search` et formulaire `role="search"` · cadre noir, ombre dure, raccourci « / » |
+| Scroller (diceui) | `src/components/ui/scroller.tsx` | détection des bords, défilement page par page · flèches dans l'en-tête de rangée |
+
+Trois composants de la première version (Selector Chips, Movie Pass Button, Reveal on hover) ont été retirés :
+la maquette les remplace par les plaques de salle, les boutons à ombre dure et des cartes sans survol révélé.
 
 ## 1. Obtenir une clé API TMDB (gratuite)
 
@@ -212,7 +214,7 @@ Elles arrivent dans la même requête que la fiche (`append_to_response`), sans 
 ```
 src/
 ├── components/
-│   ├── ui/          composants 21st.dev adaptés (hero, rating, ticket, chips, scroller…)
+│   ├── ui/          composants 21st.dev adaptés (carrousel, note, champ, défilement) et liste déroulante
 │   ├── movie/       carte, affiche, rangée, grille, bande-annonce, offres de streaming, bouton favori
 │   ├── explore/     panneau de filtres
 │   └── layout/      en-tête, pied de page, logo, page d'erreur

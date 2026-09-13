@@ -73,14 +73,14 @@ describe("validation des requêtes", () => {
 });
 
 describe("rendu de l'image", () => {
-  it("génère un PNG 1200×630 mis en cache, avec la bobine quand le portrait manque", async () => {
+  it("génère un PNG 1200×630 mis en cache, avec l'affiche typographique quand le portrait manque", async () => {
     const { calls } = stubFetch();
-    const res = await call("id=287&v=1");
+    const res = await call("id=287&v=2");
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toBe("image/png");
     expect(pngSize(res.body)).toEqual({ width: 1200, height: 630 });
     expect(res.headers["cache-control"]).toContain("s-maxage=86400");
-    // Le portrait a bien été demandé ; sa réponse 404 a déclenché la bobine de repli.
+    // Le portrait a bien été demandé ; sa réponse 404 a déclenché l'affiche typographique de repli.
     expect(calls.some((url) => url.startsWith("https://image.tmdb.org/t/p/h632/"))).toBe(true);
   });
 
@@ -107,11 +107,11 @@ describe("structure de la carte : contraintes de Satori 0.29", () => {
   });
 
   it.each([
-    ["person-287", 84, 3],
-    ["person-21684", 84, 3],
-    ["person-1126", 64, 3],
-    ["person-69759", 52, 3],
-    ["person-8193", 44, 2],
+    ["person-287", 120, 3],
+    ["person-21684", 120, 3],
+    ["person-1126", 88, 3],
+    ["person-69759", 72, 3],
+    ["person-8193", 60, 2],
   ])("%s : nom en %i px, %i films", (name, size, films) => {
     const person = fixture(name);
     const displayName = person.name.replace(/\s+/g, " ").trim();

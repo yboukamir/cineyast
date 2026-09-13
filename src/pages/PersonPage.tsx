@@ -1,21 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router";
-import { ExternalLink, UserRound } from "lucide-react";
-import { GridSkeleton, MovieGrid } from "@/components/movie/MovieGrid";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { ExternalLink } from "lucide-react";
 import { MovieRow } from "@/components/movie/MovieRow";
 import { EmptyState, ErrorState } from "@/components/States";
-import { TicketButton, TicketLink } from "@/components/ui/ticket-button";
-import { usePerson } from "@/hooks/queries";
+import { usePerson, usePersonBiography } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { buildFilmography, DEPARTMENTS, type FilmographySection } from "@/lib/filmography";
-import { releaseDateLong } from "@/lib/format";
-import { parseId, personHref } from "@/lib/slug";
+import { releaseDateLong, releaseYear } from "@/lib/format";
+import { movieHref, parseId, personHref } from "@/lib/slug";
 import { profileSrcSet, profileUrl, TmdbError, type PersonDetail } from "@/lib/tmdb";
+import { cn } from "@/lib/utils";
 
-/** Films affichés avant « Afficher tout » : deux rangées sur grand écran. */
-const PREVIEW = 12;
-/** Au-delà, la biographie est repliée. */
-const BIO_PREVIEW = 600;
+const PAGE = "mx-auto max-w-page px-gouttiere md:px-gouttiere-lg";
+/** Films affichés avant « Afficher les N films ». */
+const PREVIEW = 10;
+/** Intitulés des blocs de filmographie, tels que la maquette les nomme. */
+const TITRES: Record<FilmographySection["key"], string> = {
+  directing: "Réalisation",
+  acting: "Rôles",
+  writing: "Scénario",
+  production: "Production",
+  self: "Apparitions",
+};
 
 export default function PersonPage() {
   const { id: param } = useParams();
@@ -26,8 +32,8 @@ export default function PersonPage() {
   if (Number.isNaN(id) || (error instanceof TmdbError && error.status === 404)) return <PersonNotFound />;
   if (isError) {
     return (
-      <div className="px-page pt-28">
-        <ErrorState error={error} onRetry={() => void refetch()} />
+      <div className={cn(PAGE, "pt-8")}>
+        <ErrorState error={error} title="cette page n'a pas pu être chargée." onRetry={() => void refetch()} />
       </div>
     );
   }
@@ -45,6 +51,14 @@ function ageAt(birthday: string, until?: string | null) {
   }
   return years;
 }
+
+const initiales = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("");
 
 function PersonView({ person }: { person: PersonDetail }) {
   const navigate = useNavigate();
@@ -68,139 +82,216 @@ function PersonView({ person }: { person: PersonDetail }) {
     ["Décès", person.deathday ? `${releaseDateLong(person.deathday)}${deathAge !== null ? ` (à ${deathAge} ans)` : ""}` : ""],
   ].filter(([, value]) => value);
 
+  // Blocs répartis en deux colonnes indépendantes : déplier un bloc n'allonge que sa colonne.
+  const colonnes = [sections.filter((_, i) => i % 2 === 0), sections.filter((_, i) => i % 2 === 1)];
+
   return (
     <article>
-      <header className="px-page pt-24 md:pt-32">
-        <div className="grid gap-8 md:grid-cols-[minmax(0,17rem)_1fr] md:gap-12">
-          <div className="mx-auto w-40 sm:w-48 md:w-full">
-            <div className="aspect-[2/3] overflow-hidden bg-ink-2 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] ring-1 ring-gold/40">
-              {person.profile_path ? (
-                <img
-                  src={profileUrl(person.profile_path)}
-                  srcSet={profileSrcSet(person.profile_path)}
-                  sizes="(min-width: 768px) 272px, (min-width: 640px) 192px, 160px"
-                  alt={`Portrait de ${person.name}`}
-                  width={421}
-                  height={632}
-                  fetchPriority="high"
-                  className="size-full object-cover"
-                />
-              ) : (
-                <div className="grid size-full place-items-center text-bone/20">
-                  <UserRound className="size-16" strokeWidth={1} aria-hidden />
-                </div>
-              )}
-            </div>
+      <section aria-labelledby="personne-titre" className="border-b-[3px] border-noir bg-outremer text-creme">
+        <div className="mx-auto grid max-w-page grid-cols-[128px_1fr] items-start gap-x-5 px-gouttiere pt-6 pb-8 md:grid-cols-[240px_1fr] md:gap-x-14 md:px-gouttiere-lg md:pt-12 md:pb-14">
+          <div className="zone aspect-[2/3] border-[3px] border-noir shadow-dure-jaune">
+            {person.profile_path ? (
+              <img
+                src={profileUrl(person.profile_path)}
+                srcSet={profileSrcSet(person.profile_path)}
+                sizes="(min-width: 768px) 240px, 128px"
+                alt={`Portrait de ${person.name}`}
+                width={421}
+                height={632}
+                fetchPriority="high"
+                className="absolute inset-0 size-full object-cover"
+              />
+            ) : (
+              <div className="affiche-absente content-center">
+                <b className="!text-[44px] md:!text-[64px]">{initiales(person.name)}</b>
+                <small>Portrait indisponible</small>
+              </div>
+            )}
           </div>
 
-          <div className="text-center md:pt-6 md:text-left">
-            {department ? <p className="marquee text-xs text-gold">{department}</p> : null}
-            <h1 className="mt-2 font-display text-4xl leading-[1.02] font-medium md:text-6xl">{person.name}</h1>
-
+          <div className="min-w-0">
+            {department ? <p className="etiquette">{department}</p> : null}
+            {/* Taille de la maquette (44 / 80 px), réduite pour les noms longs qui déborderaient sur mobile. */}
+            <h1
+              id="personne-titre"
+              className={cn(
+                "hero-titre mt-4 [overflow-wrap:anywhere] md:mt-5",
+                person.name.length > 18 ? "!text-[34px] md:!text-d-lg" : "!text-[44px] md:!text-d-xl",
+              )}
+            >
+              {person.name}
+            </h1>
             {facts.length ? (
-              <dl className="mx-auto mt-6 grid max-w-xl gap-x-8 gap-y-3 text-left text-sm sm:grid-cols-2 md:mx-0">
+              <dl className="mt-4 grid gap-1.5 text-[15px] md:mt-6 md:text-lg">
                 {facts.map(([label, value]) => (
-                  <div key={label}>
-                    <dt className="marquee text-[11px] text-mute">{label}</dt>
-                    <dd className="mt-0.5 text-bone/90">{value}</dd>
+                  <div key={label} className="flex flex-wrap gap-x-2">
+                    <dt className="font-bold">{label} :</dt>
+                    <dd className="m-0">{value}</dd>
                   </div>
                 ))}
               </dl>
             ) : null}
-
-            <Biography text={person.biography} tmdbUrl={tmdbUrl} />
-
-            <div className="marquee mt-6 flex flex-wrap justify-center gap-5 text-xs text-mute md:justify-start">
-              {person.external_ids?.imdb_id ? (
-                <a
-                  href={`https://www.imdb.com/name/${encodeURIComponent(person.external_ids.imdb_id)}/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 hover:text-gold"
-                >
-                  IMDb <ExternalLink className="size-3.5" aria-hidden />
-                </a>
-              ) : null}
-              <a
-                href={tmdbUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-gold"
-              >
-                TMDB <ExternalLink className="size-3.5" aria-hidden />
-              </a>
-            </div>
           </div>
         </div>
-      </header>
+      </section>
+
+      <div className={cn(PAGE, "md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:gap-16")}>
+        <section className="pt-10 md:pt-14" aria-labelledby="biographie-titre">
+          <p className="surtitre mb-1">Parcours</p>
+          <h2 id="biographie-titre" className="titre-section">
+            Biographie
+          </h2>
+          <Biography text={person.biography} personId={person.id} tmdbUrl={tmdbUrl} />
+        </section>
+
+        <aside className="pt-10 md:pt-14" aria-labelledby="liens-titre">
+          <p className="surtitre mb-1">Ailleurs</p>
+          <h2 id="liens-titre" className="titre-section">
+            Liens
+          </h2>
+          <ul className="m-0 mt-4 list-none border-t-[3px] border-noir p-0">
+            {person.external_ids?.imdb_id ? (
+              <LienExterne href={`https://www.imdb.com/name/${encodeURIComponent(person.external_ids.imdb_id)}/`}>
+                Fiche IMDb
+              </LienExterne>
+            ) : null}
+            <LienExterne href={tmdbUrl}>Fiche TMDB</LienExterne>
+          </ul>
+        </aside>
+      </div>
 
       {knownFor.length >= 3 ? (
-        <div className="mt-10">
-          <MovieRow
-            eyebrow="Filmographie"
-            title="Les plus connus"
-            query={{
-              data: { results: knownFor },
-              isPending: false,
-              isError: false,
-              error: null,
-              refetch: () => undefined,
-            }}
-          />
-        </div>
+        <MovieRow
+          eyebrow="Ses films"
+          title="Les plus connus"
+          query={{ data: { results: knownFor }, isPending: false, isError: false, error: null, refetch: () => undefined }}
+        />
       ) : null}
 
-      <div className="px-page">
-        {sections.length ? (
-          sections.map((section) => <FilmographyBlock key={section.key} section={section} />)
-        ) : (
-          <EmptyState title="Aucun film référencé." className="mt-6">
-            TMDB ne recense pas encore de film pour cette personne.
-          </EmptyState>
-        )}
-      </div>
+      {sections.length ? (
+        <section className={cn(PAGE, "pt-14 md:pt-20")} aria-labelledby="filmographie-titre">
+          <p className="surtitre mb-1">Par métier</p>
+          <h2 id="filmographie-titre" className="titre-section mb-8">
+            Filmographie
+          </h2>
+          <div className="md:grid md:grid-cols-2 md:items-start md:gap-x-16">
+            {colonnes.map((blocs, i) =>
+              blocs.length ? (
+                <div key={i} className={i === 1 ? "mt-8 md:mt-0" : undefined}>
+                  {blocs.map((section) => (
+                    <FilmographyBlock key={section.key} section={section} />
+                  ))}
+                </div>
+              ) : null,
+            )}
+          </div>
+        </section>
+      ) : (
+        <div className={cn(PAGE, "pt-10")}>
+          <EmptyState title="Aucun film référencé.">TMDB ne recense pas encore de film pour cette personne.</EmptyState>
+        </div>
+      )}
     </article>
   );
 }
 
-function Biography({ text, tmdbUrl }: { text: string; tmdbUrl: string }) {
-  const [open, setOpen] = useState(false);
-  const bio = text.trim();
+function LienExterne({ href, children }: { href: string; children: string }) {
+  return (
+    <li className="border-b-2 border-filet">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="-mx-2 flex h-14 items-center justify-between px-2 font-semibold hover:bg-jaune"
+      >
+        <span>
+          {children}
+          <span className="sr-only"> (nouvel onglet)</span>
+        </span>
+        <ExternalLink className="size-4" strokeWidth={2.4} aria-hidden />
+      </a>
+    </li>
+  );
+}
 
-  if (!bio) {
+/** Repliée à 4 lignes sur mobile, 3 sur ordinateur ; le bouton n'apparaît que si le texte dépasse. */
+function Biography({ text, personId, tmdbUrl }: { text: string; personId: number; tmdbUrl: string }) {
+  const [open, setOpen] = useState(false);
+  const [clamped, setClamped] = useState(false);
+  const [english, setEnglish] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const englishBio = usePersonBiography(personId, "en-US", english);
+
+  const french = text.trim();
+  const shownText = french || (english ? (englishBio.data?.biography.trim() ?? "") : "");
+  const lang = french ? undefined : "en";
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || open) return;
+    const measure = () => setClamped(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open, shownText]);
+
+  if (!shownText) {
+    const englishMissing = english && englishBio.isSuccess;
     return (
-      <p className="mt-6 text-sm text-mute italic">
-        Aucune biographie n'est disponible en français.{" "}
-        <a
-          href={tmdbUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-bone not-italic underline decoration-gold/50 underline-offset-4 hover:text-gold"
-        >
-          Voir la fiche sur TMDB
-        </a>
-      </p>
+      <EmptyState
+        mark="VO"
+        title="Biographie indisponible en français."
+        className="mt-4"
+        action={
+          <>
+            {!englishMissing ? (
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => setEnglish(true)}
+                disabled={english && englishBio.isFetching}
+              >
+                {english && englishBio.isFetching ? "Chargement…" : "Lire en anglais"}
+              </button>
+            ) : null}
+            <a href={tmdbUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm">
+              Contribuer sur TMDB
+              <ExternalLink className="size-4" strokeWidth={2.4} aria-hidden />
+              <span className="sr-only"> (nouvel onglet)</span>
+            </a>
+          </>
+        }
+      >
+        {englishMissing
+          ? "TMDB n'a pas non plus de version anglaise pour cette personne."
+          : englishBio.isError
+            ? "La version anglaise n'a pas pu être chargée. Réessayez dans un instant."
+            : "TMDB n'a pas encore de version française pour cette personne. La version originale existe peut-être."}
+      </EmptyState>
     );
   }
 
-  const long = bio.length > BIO_PREVIEW;
-  // Coupe à la fin d'un mot pour ne pas tronquer au milieu.
-  const shown = open || !long ? bio : `${bio.slice(0, BIO_PREVIEW).replace(/\s+\S*$/, "")}…`;
-
   return (
-    <div className="mx-auto mt-6 max-w-2xl text-left md:mx-0">
-      <div id="biographie" className="space-y-3 leading-relaxed text-bone/85">
-        {shown.split(/\n+/).map((paragraph, i) => (
+    <div className="mt-4 max-w-[68ch]">
+      {lang ? <p className="mb-2 text-sm font-semibold text-gris">Version anglaise fournie par TMDB :</p> : null}
+      <div
+        id="biographie"
+        ref={ref}
+        lang={lang}
+        className={cn("space-y-3 text-[17px] leading-relaxed", !open && "line-clamp-4 md:line-clamp-3")}
+      >
+        {shownText.split(/\n+/).map((paragraph, i) => (
           <p key={i}>{paragraph}</p>
         ))}
       </div>
-      {long ? (
+      {clamped || open ? (
         <button
           type="button"
+          className="btn btn-sm mt-4"
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
           aria-controls="biographie"
-          className="marquee mt-3 text-xs text-gold transition-colors hover:text-gold-bright"
         >
           {open ? "Réduire" : "Lire la suite"}
         </button>
@@ -211,32 +302,50 @@ function Biography({ text, tmdbUrl }: { text: string; tmdbUrl: string }) {
 
 function FilmographyBlock({ section }: { section: FilmographySection }) {
   const [all, setAll] = useState(false);
+  const total = section.items.length;
   const shown = all ? section.items : section.items.slice(0, PREVIEW);
   const headingId = `filmographie-${section.key}`;
 
   return (
-    <section aria-labelledby={headingId} className="pt-14">
-      <h2 id={headingId} className="flex items-baseline gap-3 border-b border-line pb-4 font-display text-2xl md:text-3xl">
-        {/* L'espace explicite évite un nom accessible collé : « Interprétation81 films ». */}
-        {section.label}{" "}
-        <span className="marquee text-xs text-mute">
-          {section.items.length} film{section.items.length > 1 ? "s" : ""}
+    <section aria-labelledby={headingId} className="mt-8 border-t-[3px] border-noir pt-6 first:mt-0">
+      <div className="flex items-end justify-between gap-4">
+        <h3 id={headingId} className="font-display text-d-md text-noir">
+          {TITRES[section.key]}
+        </h3>
+        <span className="text-sm font-bold tracking-[.08em] text-gris uppercase">
+          {total} film{total > 1 ? "s" : ""}
         </span>
-      </h2>
-      <div id={`${headingId}-liste`} className="mt-8">
-        <MovieGrid movies={shown} />
       </div>
-      {section.items.length > PREVIEW ? (
-        <div className="mt-10 flex justify-center">
-          <TicketButton
-            variant="ghost"
-            onClick={() => setAll((value) => !value)}
-            aria-expanded={all}
-            aria-controls={`${headingId}-liste`}
-          >
-            {all ? "Réduire" : `Afficher les ${section.items.length} films`}
-          </TicketButton>
-        </div>
+      <ul id={`${headingId}-liste`} className="m-0 mt-2 list-none p-0">
+        {shown.map((item) => {
+          const year = releaseYear(item.release_date);
+          return (
+            <li
+              key={item.id}
+              className="grid grid-cols-[3.5rem_1fr] items-baseline gap-x-4 border-b-2 border-filet py-3 md:grid-cols-[4.5rem_1fr_1fr]"
+            >
+              <span className={cn("pt-0.5 font-display text-d-xs", year ? "text-outremer" : "text-gris")}>{year || "—"}</span>
+              <span className="min-w-0">
+                <Link to={movieHref(item)} className="font-semibold decoration-2 underline-offset-2 hover:underline">
+                  {item.title}
+                </Link>
+                {item.subtitle ? <span className="block text-sm text-gris md:hidden">{item.subtitle}</span> : null}
+              </span>
+              <span className="hidden text-sm text-gris md:block">{item.subtitle}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {total > PREVIEW ? (
+        <button
+          type="button"
+          className="btn btn-sm mt-4"
+          onClick={() => setAll((value) => !value)}
+          aria-expanded={all}
+          aria-controls={`${headingId}-liste`}
+        >
+          {all ? "Réduire" : `Afficher les ${total} films`}
+        </button>
       ) : null}
     </section>
   );
@@ -244,17 +353,15 @@ function FilmographyBlock({ section }: { section: FilmographySection }) {
 
 function PersonSkeleton() {
   return (
-    <div aria-label="Chargement de la fiche" aria-busy>
-      <div className="px-page grid gap-8 pt-24 md:grid-cols-[17rem_1fr] md:gap-12 md:pt-32">
-        <div className="skeleton mx-auto aspect-[2/3] w-40 sm:w-48 md:w-full" />
-        <div className="space-y-4 md:pt-6">
-          <div className="skeleton mx-auto h-4 w-32 md:mx-0" />
-          <div className="skeleton mx-auto h-14 w-2/3 md:mx-0" />
-          <div className="skeleton mx-auto h-24 w-full max-w-2xl md:mx-0" />
+    <div className={cn(PAGE, "pt-8")} aria-busy="true" aria-label="Chargement de la page">
+      <div className="grid grid-cols-[128px_1fr] items-start gap-x-5 border-[3px] border-noir p-4 md:grid-cols-[280px_1fr] md:gap-x-14 md:p-8">
+        <div className="squelette aspect-[2/3] border-[3px] border-filet" />
+        <div className="grid gap-3 pt-2">
+          <div className="squelette h-8 w-32" />
+          <div className="squelette h-12 w-3/5 md:h-20" />
+          <div className="squelette h-5 w-2/5" />
+          <div className="squelette h-5 w-1/2" />
         </div>
-      </div>
-      <div className="px-page mt-14">
-        <GridSkeleton count={6} />
       </div>
     </div>
   );
@@ -263,12 +370,16 @@ function PersonSkeleton() {
 function PersonNotFound() {
   useDocumentTitle("Personne introuvable");
   return (
-    <div className="px-page pt-28">
-      <EmptyState title="Cette personne n'est pas au générique.">
+    <div className={cn(PAGE, "pt-8")}>
+      <EmptyState
+        title="Cette personne n'est pas au générique."
+        action={
+          <Link to="/explorer" className="btn btn-sm">
+            Explorer le catalogue
+          </Link>
+        }
+      >
         Elle n'existe pas dans la base TMDB ou le lien est erroné.
-        <div className="mt-6 flex justify-center">
-          <TicketLink to="/explorer">Explorer le catalogue</TicketLink>
-        </div>
       </EmptyState>
     </div>
   );

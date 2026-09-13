@@ -1,21 +1,17 @@
 import { useMemo, type ReactNode, type Ref } from "react";
 import { Link } from "react-router";
-import { Heart } from "lucide-react";
 import { HeroCarousel, type HeroCarouselItem } from "@/components/ui/hero-carousel";
-import { TicketButton, TicketLink } from "@/components/ui/ticket-button";
+import { FavoriteButton } from "@/components/movie/FavoriteButton";
 import { MovieRow, type MovieRowProps } from "@/components/movie/MovieRow";
 import { ErrorState } from "@/components/States";
 import { useBelgianCinema, useFlashback, useGenres, useMovieList, useTrending, type ListKind } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useFavorites } from "@/hooks/useFavorites";
 import { useInView } from "@/hooks/useInView";
 import { FLASHBACK_YEARS, flashbackTitle, flashbackWeek } from "@/lib/flashback";
-import { releaseYear, score } from "@/lib/format";
+import { releaseYear } from "@/lib/format";
+import { numeroDeSalle } from "@/lib/salles";
 import { movieHref } from "@/lib/slug";
-import { backdropSrcSet, backdropUrl, posterUrl, type MovieSummary } from "@/lib/tmdb";
-import { cn } from "@/lib/utils";
-
-const HERO_HEIGHT = "h-[82svh] min-h-[34rem] max-h-[58rem]";
+import { backdropSrcSet, backdropUrl, posterSrcSet, posterUrl, type MovieSummary } from "@/lib/tmdb";
 
 export default function HomePage() {
   useDocumentTitle();
@@ -33,16 +29,21 @@ export default function HomePage() {
   const heroItems: HeroCarouselItem[] = featured.map((movie, i) => ({
     id: movie.id,
     title: movie.title,
-    backdrop: backdropUrl(movie.backdrop_path)!,
+    backdrop: backdropUrl(movie.backdrop_path),
     backdropSrcSet: backdropSrcSet(movie.backdrop_path),
-    image: posterUrl(movie.poster_path, "w342")!,
+    poster: posterUrl(movie.poster_path, "w342"),
+    posterSrcSet: posterSrcSet(movie.poster_path),
     href: movieHref(movie),
     credit: `N°${i + 1} des tendances de la semaine`,
     meta: [
       releaseYear(movie.release_date),
-      ...(movie.genre_ids ?? []).slice(0, 2).map((id) => genreNames.get(id) ?? ""),
-      movie.vote_average > 0 ? `★ ${score(movie.vote_average)}` : "",
+      (movie.genre_ids ?? [])
+        .slice(0, 2)
+        .map((id) => genreNames.get(id))
+        .filter(Boolean)
+        .join(", "),
     ].filter(Boolean),
+    note: movie.vote_average > 0 ? movie.vote_average : undefined,
   }));
   const featuredById = new Map(featured.map((m) => [m.id, m]));
 
@@ -51,17 +52,16 @@ export default function HomePage() {
       <h1 className="sr-only">Cineyast — films tendance, recherche et recommandations pour cinéphiles</h1>
 
       {trendingWeek.isError ? (
-        <div className="px-page pt-28 pb-6">
-          <ErrorState error={trendingWeek.error} onRetry={() => void trendingWeek.refetch()} />
+        <div className="mx-auto max-w-page px-gouttiere pt-8 md:px-gouttiere-lg">
+          <ErrorState error={trendingWeek.error} what="les tendances" onRetry={() => void trendingWeek.refetch()} />
         </div>
       ) : trendingWeek.isPending ? (
-        <div className={cn(HERO_HEIGHT, "skeleton")} aria-label="Chargement des tendances" />
+        <HeroSkeleton />
       ) : heroItems.length ? (
         <HeroCarousel
           items={heroItems}
           autoplay
           label="Tendances de la semaine"
-          className={HERO_HEIGHT}
           renderActions={(item) => {
             const movie = featuredById.get(Number(item.id));
             return movie ? <HeroActions movie={movie} /> : null;
@@ -69,33 +69,38 @@ export default function HomePage() {
         />
       ) : null}
 
-      <div className="pt-4">
-        <MovieRow eyebrow="En ce moment" title="Tendances du jour" query={trendingDay} ranked />
-        <GenreBand />
-        <LazyRow kind="now_playing" eyebrow="Au cinéma" title="À l'affiche en France" />
-        <LazyRow kind="popular" eyebrow="Le public en parle" title="Les plus populaires" moreHref="/explorer" />
-        <LazyRow kind="top_rated" eyebrow="Panthéon" title="Les mieux notés" moreHref="/explorer?tri=note" />
-        <FlashbackRow />
-        <LazyRow kind="upcoming" eyebrow="Bientôt en salle" title="Prochainement" />
-        <BelgianRow />
-      </div>
+      <MovieRow eyebrow="Aujourd'hui" title="Tendances du jour" query={trendingDay} ranked />
+      <SallesBand />
+      <LazyRow kind="now_playing" eyebrow="Au cinéma" title="À l'affiche en France" />
+      <LazyRow kind="popular" eyebrow="Le public en parle" title="Les plus populaires" moreHref="/explorer" />
+      <LazyRow kind="top_rated" eyebrow="Panthéon" title="Les mieux notés" moreHref="/explorer?tri=note" />
+      <FlashbackRow />
+      <LazyRow kind="upcoming" eyebrow="Bientôt en salle" title="Prochainement" />
+      <BelgianRow />
     </>
   );
 }
 
 function HeroActions({ movie }: { movie: MovieSummary }) {
-  const { isFavorite, toggle } = useFavorites();
-  const active = isFavorite(movie.id);
   return (
     <>
-      <TicketLink to={movieHref(movie)} variant="gold">
+      <Link to={movieHref(movie)} className="btn btn-primary">
         Voir la fiche
-      </TicketLink>
-      <TicketButton variant="ghost" aria-pressed={active} onClick={() => toggle(movie)}>
-        <Heart className={cn(active && "fill-velvet-bright text-velvet-bright")} />
-        {active ? "Dans vos favoris" : "Favori"}
-      </TicketButton>
+      </Link>
+      <FavoriteButton movie={movie} variant="bouton" label="Favori" />
     </>
+  );
+}
+
+/** Mêmes proportions que le héros chargé : image 16:9 puis bandeau outremer. */
+function HeroSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Chargement des tendances">
+      <div className="mx-auto max-w-page md:px-gouttiere-lg md:pt-8">
+        <div className="squelette aspect-[16/9] max-h-[560px] w-full border-y-[3px] border-filet md:border-[3px]" />
+      </div>
+      <div className="h-[196px] border-b-[3px] border-noir bg-outremer md:h-[262px]" />
+    </div>
   );
 }
 
@@ -137,37 +142,34 @@ function BelgianRow() {
 
 /** Hors de portée : une simple réserve de hauteur plutôt que huit squelettes animés par rangée. */
 function RowSlot({ slotRef, inView, children }: { slotRef: Ref<HTMLDivElement>; inView: boolean; children: ReactNode }) {
-  return <div ref={slotRef}>{inView ? children : <div aria-hidden className="h-[27rem] md:h-[30rem]" />}</div>;
+  return <div ref={slotRef}>{inView ? children : <div aria-hidden className="h-[392px] md:h-[486px]" />}</div>;
 }
 
-function GenreBand() {
+/** « Choisissez votre salle » : chaque genre est une salle numérotée, comme dans un multiplexe. */
+function SallesBand() {
   const genres = useGenres();
   if (!genres.data?.length) return null;
 
   return (
-    <section aria-labelledby="genres-title" className="px-page py-10">
-      <div className="border-y border-line py-10 md:grid md:grid-cols-[minmax(0,17rem)_1fr] md:gap-12">
+    <section aria-labelledby="salles-titre" className="mx-auto max-w-page px-gouttiere pt-14 md:px-gouttiere-lg md:pt-20">
+      <div className="border-t-[3px] border-noir pt-8 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-12 md:pt-10">
         <div>
-          <p className="marquee text-xs text-gold">Programmation</p>
-          <h2 id="genres-title" className="mt-1 font-display text-3xl italic">
+          <p className="surtitre mb-1">Par genre</p>
+          <h2 id="salles-titre" className="titre-section">
             Choisissez votre salle
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-mute">
-            Parcourez le catalogue par genre, puis affinez par année et par note.
-          </p>
+          <p className="mt-3 max-w-[40ch] text-gris">Parcourez le catalogue par genre, puis affinez par année et par note.</p>
         </div>
-        <ul className="mt-6 flex flex-wrap gap-2 md:mt-0 md:content-start">
+        <div className="mt-6 flex flex-wrap gap-3 md:mt-0">
           {genres.data.map((genre) => (
-            <li key={genre.id}>
-              <Link
-                to={`/explorer?genres=${genre.id}`}
-                className="flex h-10 items-center border border-line-strong px-4 text-sm text-bone/85 transition-colors hover:border-gold hover:text-gold"
-              >
-                {genre.name}
-              </Link>
-            </li>
+            <Link key={genre.id} to={`/explorer?genres=${genre.id}`} className="plaque">
+              <span className="plaque-n" aria-hidden>
+                {numeroDeSalle(genres.data, genre.id)}
+              </span>
+              <span className="plaque-t">{genre.name}</span>
+            </Link>
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );

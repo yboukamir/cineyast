@@ -1,8 +1,8 @@
 import { Link } from "react-router";
-import { CardHoverReveal, CardHoverRevealContent, CardHoverRevealMain } from "@/components/ui/reveal-on-hover";
 import { FavoriteButton } from "@/components/movie/FavoriteButton";
+import { NoteAbsente, NoteTuiles } from "@/components/movie/NoteTuiles";
 import { Poster } from "@/components/movie/Poster";
-import { releaseYear, score } from "@/lib/format";
+import { releaseYear } from "@/lib/format";
 import { movieHref } from "@/lib/slug";
 import type { MovieSummary } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
@@ -17,65 +17,44 @@ interface MovieCardProps {
   movie: CardMovie;
   sizes: string;
   eager?: boolean;
-  /** Numéro affiché en filigrane (classement des tendances). */
+  /** Pastille de classement (tendances). */
   rank?: number;
+  /** Largeur donnée par la grille parente au lieu de la largeur fixe des rangées. */
+  fluid?: boolean;
   className?: string;
 }
 
-export function MovieCard({ movie, sizes, eager, rank, className }: MovieCardProps) {
+export function MovieCard({ movie, sizes, eager, rank, fluid = false, className }: MovieCardProps) {
+  const href = movieHref(movie);
   const year = releaseYear(movie.release_date);
   const hasScore = movie.vote_average > 0 && (movie.vote_count ?? 1) > 0;
 
   return (
-    <CardHoverReveal className={cn("group overflow-visible", className)}>
-      <Link to={movieHref(movie)} className="block">
-        <div className="relative aspect-[2/3] overflow-hidden bg-ink-2">
-          <CardHoverRevealMain hoverScale={1.04}>
-            <Poster path={movie.poster_path} title={movie.title} sizes={sizes} eager={eager} />
-          </CardHoverRevealMain>
+    <article className={cn("carte", fluid && "w-auto snap-none md:w-auto", className)}>
+      {rank ? (
+        <span className="pastille">
+          <span className="sr-only">Classement </span>
+          {rank}
+        </span>
+      ) : null}
 
-          {movie.overview ? (
-            <CardHoverRevealContent className="inset-x-0 bottom-0 hidden bg-gradient-to-t from-ink via-ink/90 to-transparent px-3 pt-12 pb-3 [@media(hover:hover)]:block">
-              <p className="line-clamp-6 text-xs leading-relaxed text-bone/85">{movie.overview}</p>
-            </CardHoverRevealContent>
-          ) : null}
-
-          {rank ? (
-            <span
-              aria-hidden
-              className="pointer-events-none absolute bottom-1 left-2 font-display text-5xl leading-none italic text-bone/90 [text-shadow:0_2px_12px_rgb(0_0_0/0.8)] transition-opacity group-hover:opacity-0"
-            >
-              {rank}
-            </span>
-          ) : null}
-
-          {/* Cadre doré au survol */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 ring-1 ring-line ring-inset transition-shadow duration-300 group-hover:ring-gold/70"
-          />
-        </div>
-
-        <div className="mt-2.5 pr-1">
-          <h3 className="line-clamp-2 font-display text-[15px] leading-snug transition-colors group-hover:text-gold-bright">
-            {movie.title}
-          </h3>
-          <p className="marquee mt-1 flex items-center gap-2 text-[11px] text-mute">
-            {year ? <span>{year}</span> : null}
-            {year && hasScore ? <span aria-hidden className="text-line-strong">/</span> : null}
-            {hasScore ? (
-              <span className="text-gold">
-                <span aria-hidden>★ </span>
-                <span className="sr-only">Note </span>
-                {score(movie.vote_average)}
-              </span>
-            ) : null}
-          </p>
-          {movie.subtitle ? <p className="mt-1 line-clamp-1 text-xs text-mute">{movie.subtitle}</p> : null}
-        </div>
+      {/* L'affiche est cliquable à la souris ; au clavier, c'est le titre qui porte le lien. */}
+      <Link to={href} className="carte-media" aria-label={`Voir la fiche de ${movie.title}`} tabIndex={-1}>
+        <Poster path={movie.poster_path} title={movie.title} sizes={sizes} eager={eager} />
       </Link>
 
-      <FavoriteButton movie={movie} className="absolute top-2 right-2 z-10" />
-    </CardHoverReveal>
+      <FavoriteButton movie={movie} />
+
+      <h3 className="carte-titre">
+        <Link to={href} className="decoration-2 underline-offset-2 hover:underline">
+          {movie.title}
+        </Link>
+      </h3>
+      <p className="carte-meta">
+        <span>{year || "—"}</span>
+        {hasScore ? <NoteTuiles value={movie.vote_average} /> : <NoteAbsente />}
+      </p>
+      {movie.subtitle ? <p className="mt-1 line-clamp-1 text-sm text-gris">{movie.subtitle}</p> : null}
+    </article>
   );
 }

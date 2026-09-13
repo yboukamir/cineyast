@@ -19,7 +19,7 @@ const IMG = "https://image.tmdb.org/t/p";
 const SITE = "Cineyast";
 const CANONICAL_ORIGIN = "https://cineyast.com";
 /** À incrémenter quand le dessin de la carte change : force LinkedIn et consorts à retélécharger l'image. */
-const OG_VERSION = 1;
+const OG_VERSION = 2;
 
 /** Seuls les domaines du projet peuvent servir de source pour index.html. */
 const ALLOWED_HOST = /^(?:www\.)?cineyast\.com$|^[a-z0-9-]+\.vercel\.app$/i;
