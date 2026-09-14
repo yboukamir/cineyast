@@ -17,7 +17,7 @@ Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de 
 
 ![Fiche détaillée du film Fight Club : affiche, note, réalisation et bande-annonce](docs/capture-fiche.jpg)
 
-*Fiche film — classification française, genres en plaques de salle, note en tuiles, réalisation et bande-annonce.*
+*Fiche film — classification française, genres en plaques, note en tuiles, réalisation et bande-annonce.*
 
 ## Stack
 
@@ -45,7 +45,7 @@ conservé et leur **apparence** suit la maquette :
 | Scroller (diceui) | `src/components/ui/scroller.tsx` | détection des bords, défilement page par page · flèches dans l'en-tête de rangée |
 
 Trois composants de la première version (Selector Chips, Movie Pass Button, Reveal on hover) ont été retirés :
-la maquette les remplace par les plaques de salle, les boutons à ombre dure et des cartes sans survol révélé.
+la maquette les remplace par les plaques de genre, les boutons à ombre dure et des cartes sans survol révélé.
 
 ## 1. Obtenir une clé API TMDB (gratuite)
 

@@ -147,24 +147,15 @@
     @apply font-semibold text-outremer underline decoration-2 underline-offset-4 hover:bg-jaune hover:text-noir hover:no-underline;
   }
 
-  /* Plaque de salle : un genre = une salle numérotée. */
+  /* Plaque de genre : lien ou filtre, noir quand il est actif. */
   .plaque {
-    @apply inline-flex h-11 items-stretch border-2 border-noir bg-creme text-[15px] font-semibold text-noir transition-colors duration-(--duration-vite);
-  }
-  .plaque > .plaque-n {
-    @apply grid min-w-11 place-items-center border-r-2 border-noir bg-creme px-2 pt-0.5 font-display text-d-xs text-outremer;
-  }
-  .plaque > .plaque-t {
-    @apply grid place-items-center px-3;
+    @apply inline-flex h-11 items-center border-2 border-noir bg-creme px-4 text-[15px] font-semibold text-noir transition-colors duration-(--duration-vite);
   }
   .plaque:hover {
     @apply bg-jaune;
   }
   .plaque[aria-pressed="true"] {
     @apply bg-noir text-creme;
-  }
-  .plaque[aria-pressed="true"] > .plaque-n {
-    @apply bg-jaune text-noir;
   }
 
   /* Note en tuiles de fronton */
@@ -250,7 +241,7 @@
 
   /* Rangée défilante */
   .rangee-scroll {
-    @apply -mx-gouttiere flex snap-x snap-mandatory scroll-pl-gouttiere gap-5 overflow-x-auto scroll-smooth px-gouttiere pt-3 pb-4 md:mx-0 md:scroll-pl-0 md:gap-7 md:px-0;
+    @apply -mx-gouttiere flex snap-x snap-mandatory scroll-pl-gouttiere gap-5 overflow-x-auto scroll-smooth px-gouttiere pt-3 pb-4 md:-mx-3 md:scroll-pl-3 md:gap-7 md:px-3;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
   }

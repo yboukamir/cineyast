@@ -94,7 +94,7 @@ export default function ExplorePage() {
           <h1 id="explorer-titre" className="hero-titre line-clamp-2 pt-[.15em] !text-[44px] [overflow-wrap:anywhere] md:!text-d-lg">
             {searchMode ? `Résultats pour « ${filters.query} »` : "Explorer"}
           </h1>
-          <p className="mt-3 text-[15px] md:text-lg">Le catalogue TMDB par titre, par salle, par année et par note.</p>
+          <p className="mt-3 text-[15px] md:text-lg">Le catalogue TMDB par titre, par genre, par année et par note.</p>
           <SearchBar
             value={text}
             onChange={setText}
@@ -164,7 +164,7 @@ export default function ExplorePage() {
                 </button>
               }
             >
-              Essayez un autre titre, une autre salle, une autre année ou une note plus basse.
+              Essayez un autre titre, un autre genre, une autre année ou une note plus basse.
             </EmptyState>
           ) : (
             <div className={cn("transition-opacity", isPlaceholderData && "opacity-50")}>

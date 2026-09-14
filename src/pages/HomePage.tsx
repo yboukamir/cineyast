@@ -9,7 +9,6 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useInView } from "@/hooks/useInView";
 import { FLASHBACK_YEARS, flashbackTitle, flashbackWeek } from "@/lib/flashback";
 import { releaseYear } from "@/lib/format";
-import { numeroDeSalle } from "@/lib/salles";
 import { movieHref } from "@/lib/slug";
 import { backdropSrcSet, backdropUrl, posterSrcSet, posterUrl, type MovieSummary } from "@/lib/tmdb";
 
@@ -70,8 +69,8 @@ export default function HomePage() {
       ) : null}
 
       <MovieRow eyebrow="Aujourd'hui" title="Tendances du jour" query={trendingDay} ranked />
-      <SallesBand />
-      <LazyRow kind="now_playing" eyebrow="Au cinéma" title="À l'affiche en France" />
+      <GenresBand />
+      <LazyRow kind="now_playing" eyebrow="Au cinéma" title="À l'affiche" />
       <LazyRow kind="popular" eyebrow="Le public en parle" title="Les plus populaires" moreHref="/explorer" />
       <LazyRow kind="top_rated" eyebrow="Panthéon" title="Les mieux notés" moreHref="/explorer?tri=note" />
       <FlashbackRow />
@@ -146,28 +145,25 @@ function RowSlot({ slotRef, inView, children }: { slotRef: Ref<HTMLDivElement>; 
   return <div ref={slotRef}>{inView ? children : <div aria-hidden className="h-[392px] md:h-[486px]" />}</div>;
 }
 
-/** « Choisissez votre salle » : chaque genre est une salle numérotée, comme dans un multiplexe. */
-function SallesBand() {
+/** Accès direct à l'exploration, un genre à la fois. */
+function GenresBand() {
   const genres = useGenres();
   if (!genres.data?.length) return null;
 
   return (
-    <section aria-labelledby="salles-titre" className="mx-auto max-w-page px-gouttiere pt-14 md:px-gouttiere-lg md:pt-20">
+    <section aria-labelledby="genres-titre" className="mx-auto max-w-page px-gouttiere pt-14 md:px-gouttiere-lg md:pt-20">
       <div className="border-t-[3px] border-noir pt-8 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-12 md:pt-10">
         <div>
-          <p className="surtitre mb-1">Par genre</p>
-          <h2 id="salles-titre" className="titre-section">
-            Choisissez votre salle
+          <p className="surtitre mb-1">Explorer</p>
+          <h2 id="genres-titre" className="titre-section">
+            Choisissez un genre
           </h2>
           <p className="mt-3 max-w-[40ch] text-gris">Parcourez le catalogue par genre, puis affinez par année et par note.</p>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 md:mt-0">
           {genres.data.map((genre) => (
             <Link key={genre.id} to={`/explorer?genres=${genre.id}`} className="plaque">
-              <span className="plaque-n" aria-hidden>
-                {numeroDeSalle(genres.data, genre.id)}
-              </span>
-              <span className="plaque-t">{genre.name}</span>
+              {genre.name}
             </Link>
           ))}
         </div>

@@ -1,7 +1,6 @@
 import { useId } from "react";
 import { RotateCw } from "lucide-react";
 import { NativeSelect } from "@/components/ui/native-select";
-import { numeroDeSalle } from "@/lib/salles";
 import type { CatalogFilters, Genre, SortKey } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +34,7 @@ export function Filters({ filters, genres, searchMode, onChange, onReset, active
     <div className="grid gap-6 border-[3px] border-noir bg-creme p-4 md:p-6">
       <fieldset className="m-0 min-w-0 border-0 p-0">
         <legend className="surtitre mb-1 p-0">Genres</legend>
-        <p className="mb-3 text-sm text-gris">Les films doivent combiner toutes les salles choisies.</p>
+        <p className="mb-3 text-sm text-gris">Les films doivent combiner tous les genres choisis.</p>
         {genres ? (
           <div className="flex flex-wrap gap-3">
             {genres.map((genre) => (
@@ -46,10 +45,7 @@ export function Filters({ filters, genres, searchMode, onChange, onReset, active
                 aria-pressed={filters.genres.includes(genre.id)}
                 onClick={() => toggleGenre(genre.id)}
               >
-                <span className="plaque-n" aria-hidden>
-                  {numeroDeSalle(genres, genre.id)}
-                </span>
-                <span className="plaque-t">{genre.name}</span>
+                {genre.name}
               </button>
             ))}
           </div>

@@ -11,10 +11,9 @@ import { WatchProviders } from "@/components/movie/WatchProviders";
 import { EmptyState, ErrorState } from "@/components/States";
 import { heroTitleSize } from "@/components/ui/hero-carousel";
 import { Rating } from "@/components/ui/rating";
-import { useGenres, useMovie } from "@/hooks/queries";
+import { useMovie } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { count, releaseYear, runtime, score } from "@/lib/format";
-import { numeroDeSalle } from "@/lib/salles";
 import { movieHref, parseId, personHref } from "@/lib/slug";
 import {
   backdropSrcSet,
@@ -69,7 +68,6 @@ const Separateur = () => <span className="size-2 border-2 border-noir bg-jaune" 
 function MovieView({ movie }: { movie: MovieDetail }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const genres = useGenres();
   const trailerRef = useRef<HTMLElement>(null);
 
   // URL canonique : /film/550 ou /film/550-ancien-slug → /film/550-fight-club
@@ -144,21 +142,13 @@ function MovieView({ movie }: { movie: MovieDetail }) {
             <div className="col-span-2 mt-6 flex flex-col gap-5 md:col-start-2 md:mt-7">
               {movie.genres.length ? (
                 <ul aria-label="Genres" className="m-0 flex list-none flex-wrap gap-3 p-0">
-                  {movie.genres.map((genre) => {
-                    const salle = numeroDeSalle(genres.data, genre.id);
-                    return (
-                      <li key={genre.id}>
-                        <Link to={`/explorer?genres=${genre.id}`} className="plaque">
-                          {/* Case du numéro toujours présente : les genres arrivent après la fiche, et la
-                              plaque qui s'élargissait à leur arrivée décalait la mise en page (CLS mesuré). */}
-                          <span className="plaque-n" aria-hidden>
-                            {salle ?? ""}
-                          </span>
-                          <span className="plaque-t">{genre.name}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
+                  {movie.genres.map((genre) => (
+                    <li key={genre.id}>
+                      <Link to={`/explorer?genres=${genre.id}`} className="plaque">
+                        {genre.name}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               ) : null}
 
