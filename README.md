@@ -6,7 +6,8 @@ Site de découverte et de recommandation de films pour cinéphiles — [cineyast
 Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting,
 bande-annonce et offres de streaming du pays du visiteur (Belgique, France, Suisse, Canada…), pages acteurs et réalisateurs avec leur filmographie,
 recommandations, et une liste de favoris personnelle. Sur l'accueil, une rangée « Flashback » montre les films
-sortis en salle en France la même semaine il y a 25 ans, et une autre les films belges et coproductions.
+sortis en salle en France la même semaine il y a 25 ans, et une autre les films belges et coproductions. Un classement du mois montre les 5 films les mieux notés d'un genre
+qui change chaque mois (horreur en octobre, documentaire en novembre…), parmi les films sortis depuis au moins un an.
 
 Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de l'API publique
 [TMDB](https://www.themoviedb.org/) — aucune donnée de film n'est codée en dur.

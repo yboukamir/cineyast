@@ -4,9 +4,10 @@ import { HeroCarousel, type HeroCarouselItem } from "@/components/ui/hero-carous
 import { FavoriteButton } from "@/components/movie/FavoriteButton";
 import { MovieRow, type MovieRowProps } from "@/components/movie/MovieRow";
 import { ErrorState } from "@/components/States";
-import { useBelgianCinema, useFlashback, useGenres, useMovieList, useTrending, type ListKind } from "@/hooks/queries";
+import { useBelgianCinema, useFlashback, useGenres, useMonthlyTop, useMovieList, useTrending, type ListKind } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useInView } from "@/hooks/useInView";
+import { classementDuMois, surtitreClassement, titreClassement } from "@/lib/classement";
 import { FLASHBACK_YEARS, flashbackTitle, flashbackWeek } from "@/lib/flashback";
 import { releaseYear } from "@/lib/format";
 import { movieHref } from "@/lib/slug";
@@ -73,6 +74,7 @@ export default function HomePage() {
       <LazyRow kind="now_playing" eyebrow="Au cinéma" title="À l'affiche" />
       <LazyRow kind="popular" eyebrow="Le public en parle" title="Les plus populaires" moreHref="/explorer" />
       <LazyRow kind="top_rated" eyebrow="Panthéon" title="Les mieux notés" moreHref="/explorer?tri=note" />
+      <MonthlyTopRow />
       <FlashbackRow />
       <LazyRow kind="upcoming" eyebrow="Bientôt en salle" title="Prochainement" />
       <BelgianRow />
@@ -125,6 +127,25 @@ function FlashbackRow() {
   return (
     <RowSlot slotRef={ref} inView={inView}>
       <MovieRow eyebrow={`Flashback · il y a ${FLASHBACK_YEARS} ans`} title={flashbackTitle(period)} query={query} />
+    </RowSlot>
+  );
+}
+
+/** Classement du mois : un genre, ses 5 films les mieux notés, à la manière des « 5 films qui… » des revues. */
+function MonthlyTopRow() {
+  const [ref, inView] = useInView<HTMLDivElement>();
+  const query = useMonthlyTop(inView);
+  const now = new Date();
+  const classement = classementDuMois(now);
+  return (
+    <RowSlot slotRef={ref} inView={inView}>
+      <MovieRow
+        eyebrow={surtitreClassement(now)}
+        title={titreClassement(classement)}
+        query={query}
+        ranked
+        moreHref={`/explorer?genres=${classement.genre}&tri=note`}
+      />
     </RowSlot>
   );
 }

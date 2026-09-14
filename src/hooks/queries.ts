@@ -33,6 +33,13 @@ export const useFlashback = (enabled = true) => {
 export const useBelgianCinema = (enabled = true) =>
   useQuery({ queryKey: ["belgian-cinema"], queryFn: ({ signal }) => api.belgianCinema(signal), enabled });
 
+/** Clé datée du mois : le thème change le 1er, même si l'onglet reste ouvert. */
+export const useMonthlyTop = (enabled = true) => {
+  const now = new Date();
+  const month = `${now.getFullYear()}-${now.getMonth() + 1}`;
+  return useQuery({ queryKey: ["classement", month], queryFn: ({ signal }) => api.monthlyTop(now, signal), enabled });
+};
+
 export const useGenres = () =>
   useQuery({
     queryKey: ["genres"],

@@ -5,6 +5,7 @@
  */
 
 import { firstReleasesIn, flashbackMonth, flashbackWeek, MIN_FLASHBACK_MOVIES, type ReleaseWindow } from "@/lib/flashback";
+import { classementDuMois, sortiAvant, TAILLE_CLASSEMENT } from "@/lib/classement";
 
 // ─── Types (sous-ensemble des réponses TMDB réellement utilisé) ─────────────
 
@@ -277,6 +278,22 @@ export const api = {
       },
       signal,
     ),
+
+  /** Classement du mois : les films du genre les mieux notés, sortis depuis au moins un an (src/lib/classement.ts). */
+  monthlyTop: async (now: Date, signal?: AbortSignal): Promise<Paginated<MovieSummary>> => {
+    const classement = classementDuMois(now);
+    const page = await tmdb<Paginated<MovieSummary>>(
+      "/discover/movie",
+      {
+        sort_by: "vote_average.desc",
+        with_genres: classement.genre,
+        "vote_count.gte": classement.minVotes,
+        "primary_release_date.lte": sortiAvant(now),
+      },
+      signal,
+    );
+    return { ...page, results: page.results.slice(0, TAILLE_CLASSEMENT) };
+  },
 };
 
 export interface FlashbackResult {
