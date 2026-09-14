@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { EmptyState } from "@/components/States";
 import { releaseDateLong } from "@/lib/format";
+import { infosPays, justWatchUrl } from "@/lib/pays";
 import type { WatchAvailability } from "@/lib/tmdb";
 import { cn } from "@/lib/utils";
 import { buildGroups, type WatchGroup } from "@/lib/watchProviders";
@@ -68,7 +69,7 @@ function ProviderGroup({ group }: { group: WatchGroup }) {
   );
 }
 
-function NoOffer({ releaseDate }: { releaseDate?: string }) {
+function NoOffer({ releaseDate, pays }: { releaseDate?: string; pays: string }) {
   const released = releaseDate ? new Date(`${releaseDate}T00:00:00`) : null;
   const days = released && !Number.isNaN(released.getTime()) ? (Date.now() - released.getTime()) / 86_400_000 : null;
   const date = releaseDateLong(releaseDate);
@@ -79,13 +80,13 @@ function NoOffer({ releaseDate }: { releaseDate?: string }) {
     context = `Sorti en salle le ${date} : un film arrive généralement en location quelques mois après sa sortie au cinéma, et plus tard en abonnement.`;
 
   return (
-    <EmptyState mark="Pas de séance" title="Aucune offre de streaming en Belgique pour le moment.">
+    <EmptyState mark="Pas de séance" title={`Aucune offre de streaming ${infosPays(pays).dans} pour le moment.`}>
       {context}
     </EmptyState>
   );
 }
 
-export function WatchProviders({ availability, releaseDate }: { availability?: WatchAvailability; releaseDate?: string }) {
+export function WatchProviders({ availability, releaseDate, pays }: { availability?: WatchAvailability; releaseDate?: string; pays: string }) {
   const groups = availability ? buildGroups(availability) : [];
 
   return (
@@ -97,12 +98,12 @@ export function WatchProviders({ availability, releaseDate }: { availability?: W
           ))}
         </div>
       ) : (
-        <NoOffer releaseDate={releaseDate} />
+        <NoOffer releaseDate={releaseDate} pays={pays} />
       )}
       {/* Attribution exigée par TMDB pour utiliser ces données. */}
       <p className="mt-5 text-sm text-gris">
         Disponibilités fournies par{" "}
-        <a href="https://www.justwatch.com/be" target="_blank" rel="noopener noreferrer" className="lien">
+        <a href={justWatchUrl(pays)} target="_blank" rel="noopener noreferrer" className="lien">
           JustWatch
         </a>
         .

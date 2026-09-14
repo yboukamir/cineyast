@@ -4,7 +4,7 @@
 
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
 Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting,
-bande-annonce et offres de streaming en Belgique, pages acteurs et réalisateurs avec leur filmographie,
+bande-annonce et offres de streaming du pays du visiteur (Belgique, France, Suisse, Canada…), pages acteurs et réalisateurs avec leur filmographie,
 recommandations, et une liste de favoris personnelle. Sur l'accueil, une rangée « Flashback » montre les films
 sortis en salle en France la même semaine il y a 25 ans, et une autre les films belges et coproductions.
 
@@ -216,10 +216,18 @@ Le pied de page affiche les deux éléments exigés par les conditions d'utilisa
   <https://www.themoviedb.org/about/logos-attribution>), lié à themoviedb.org et moins proéminent que le
   logotype Cinéyast. Il est servi depuis le domaine, la CSP n'autorisant que les images locales et TMDB.
 
-La section **« Où regarder »** des fiches films affiche les offres en Belgique (abonnement, location, achat),
+La section **« Où regarder »** des fiches films affiche les offres du pays du visiteur (abonnement, location, achat),
 issues de l'endpoint `watch/providers` de TMDB, lui-même alimenté par JustWatch. TMDB exige d'attribuer ces
 données à JustWatch : la mention « Disponibilités fournies par JustWatch », avec un lien, figure sous les offres.
 Elles arrivent dans la même requête que la fiche (`append_to_response`), sans appel réseau supplémentaire.
+
+Le pays des offres est celui du visiteur, parmi 14 pays francophones où TMDB référence des offres
+(`src/lib/pays.ts` : Belgique, France, Suisse, Canada, Luxembourg, Monaco, Maroc, Algérie, Tunisie,
+Sénégal, Côte d'Ivoire, Cameroun, Madagascar, Maurice). Ordre de priorité : le choix fait dans le menu « Pays »
+de la fiche (mémorisé dans le navigateur), le pays de la connexion renvoyé par `api/pays.js` (en-tête
+`x-vercel-ip-country` de Vercel, réponse jamais mise en cache), la région de la langue du navigateur
+(`fr-BE`, `fr-CA`…), puis la France. Les listes de sorties en salle restent françaises : TMDB y est bien
+mieux renseigné qu'en Belgique.
 
 ## Structure
 
@@ -238,6 +246,7 @@ src/
 api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
 api/share.js         balises de partage des fiches films et des pages personnes (Vercel)
 api/og/personne.js   carte de partage 1200×630 des pages personnes, polices dans api/og/_fonts (Vercel)
+api/pays.js          pays du visiteur pour les offres de streaming (en-tête Vercel, sans cache)
 api/sitemap.js       sitemap.xml : pages fixes et fiches des listes TMDB les plus cherchées (Vercel)
 server/              proxy TMDB de développement + CSP partagée
 public/              favicons, robots.txt (avec la ligne Sitemap)

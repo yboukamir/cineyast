@@ -116,7 +116,7 @@ describe("regroupement des offres de streaming en Belgique", () => {
     a.length === b.length && a.every((p) => b.some((q) => q.provider_id === p.provider_id));
 
   it.each(["movie-550", "movie-496243"])("%s : location et achat fusionnés seulement s'ils sont identiques", (name) => {
-    const offres = watchProviders(fixture(name) as MovieDetail);
+    const offres = watchProviders(fixture(name) as MovieDetail, "BE");
     expect(offres).toBeDefined();
     const keys = buildGroups(offres!).map((g) => g.key);
     if (offres!.rent?.length && same(offres!.rent, offres!.buy)) {
@@ -128,12 +128,12 @@ describe("regroupement des offres de streaming en Belgique", () => {
   });
 
   it("les données couvrent les deux cas (fusion et séparation)", () => {
-    const merged = (name: string) => buildGroups(watchProviders(fixture(name) as MovieDetail)!).some((g) => g.key === "rent-buy");
+    const merged = (name: string) => buildGroups(watchProviders(fixture(name) as MovieDetail, "BE")!).some((g) => g.key === "rent-buy");
     expect([merged("movie-550"), merged("movie-496243")].sort()).toEqual([false, true]);
   });
 
   it("trie les plateformes par priorité d'affichage TMDB", () => {
-    for (const group of buildGroups(watchProviders(fixture("movie-550") as MovieDetail)!)) {
+    for (const group of buildGroups(watchProviders(fixture("movie-550") as MovieDetail, "BE")!)) {
       const priorities = group.providers.map((p) => p.display_priority);
       expect(priorities).toEqual([...priorities].sort((a, b) => a - b));
     }

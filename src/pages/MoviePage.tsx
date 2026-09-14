@@ -7,13 +7,16 @@ import { MovieRow } from "@/components/movie/MovieRow";
 import { NoteTuiles } from "@/components/movie/NoteTuiles";
 import { Poster } from "@/components/movie/Poster";
 import { Trailer } from "@/components/movie/Trailer";
+import { PaysSelect } from "@/components/movie/PaysSelect";
 import { WatchProviders } from "@/components/movie/WatchProviders";
 import { EmptyState, ErrorState } from "@/components/States";
 import { heroTitleSize } from "@/components/ui/hero-carousel";
 import { Rating } from "@/components/ui/rating";
 import { useMovie } from "@/hooks/queries";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { usePays } from "@/hooks/usePays";
 import { count, releaseYear, runtime, score } from "@/lib/format";
+import { infosPays } from "@/lib/pays";
 import { movieHref, parseId, personHref } from "@/lib/slug";
 import {
   backdropSrcSet,
@@ -69,6 +72,7 @@ function MovieView({ movie }: { movie: MovieDetail }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const trailerRef = useRef<HTMLElement>(null);
+  const [pays, choisirPays] = usePays();
 
   // URL canonique : /film/550 ou /film/550-ancien-slug → /film/550-fight-club
   const canonical = movieHref(movie);
@@ -225,10 +229,15 @@ function MovieView({ movie }: { movie: MovieDetail }) {
           </section>
 
           <section className="pt-12 md:pt-16" aria-labelledby="ou-regarder">
-            <SectionHead id="ou-regarder" eyebrow="Séances à domicile">
-              Où regarder en Belgique
-            </SectionHead>
-            <WatchProviders availability={watchProviders(movie)} releaseDate={movie.release_date} />
+            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+              <div>
+                <SectionHead id="ou-regarder" eyebrow="Séances à domicile">
+                  Où regarder {infosPays(pays).dans}
+                </SectionHead>
+              </div>
+              <PaysSelect value={pays} onChange={choisirPays} />
+            </div>
+            <WatchProviders availability={watchProviders(movie, pays)} releaseDate={movie.release_date} pays={pays} />
           </section>
 
           {cast.length ? (

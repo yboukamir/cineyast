@@ -139,9 +139,8 @@ export class TmdbError extends Error {
 
 const ENDPOINT = "/api/tmdb.php";
 export const LANGUAGE = "fr-FR";
+/** Sorties en salle : la France, bien mieux renseignée (128 films à l'affiche contre 21 en Belgique dans TMDB, septembre 2026). Les offres de streaming suivent le pays du visiteur (src/lib/pays.ts). */
 export const REGION = "FR";
-/** Offres de streaming : la Belgique. Les sorties en salle restent françaises (21 films à l'affiche en BE contre 128 en FR dans TMDB, septembre 2026). */
-export const WATCH_REGION = "BE";
 /** TMDB refuse les pages au-delà de 500. */
 export const MAX_PAGE = 500;
 
@@ -362,6 +361,6 @@ export const directorsOf = (movie: MovieDetail): Pick<CrewMember, "id" | "name">
     .filter((c, i, all) => all.findIndex((d) => d.id === c.id) === i)
     .map(({ id, name }) => ({ id, name }));
 
-/** Offres en Belgique, ou undefined si JustWatch n'en référence aucune. */
-export const watchProviders = (movie: MovieDetail): WatchAvailability | undefined =>
-  movie["watch/providers"]?.results[WATCH_REGION];
+/** Offres dans un pays (code de src/lib/pays.ts), ou undefined si JustWatch n'en référence aucune. */
+export const watchProviders = (movie: MovieDetail, pays: string): WatchAvailability | undefined =>
+  movie["watch/providers"]?.results[pays];
