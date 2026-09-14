@@ -53,11 +53,13 @@ export function Header() {
               onSubmit={submit}
               inputRef={desktopRef}
               shortcut
-              className="hidden max-w-[480px] flex-1 md:flex"
+              // min-w-0 : sans lui, la barre refuse de rétrécir sous sa largeur naturelle, et vers 768 px
+              // le lien Favoris sortait de 8 px à droite (page plus large que l'écran).
+              className="hidden max-w-[480px] min-w-0 flex-1 md:flex"
             />
           ) : null}
 
-          <nav aria-label="Navigation principale" className="ml-auto flex gap-0 md:gap-1">
+          <nav aria-label="Navigation principale" className="ml-auto flex shrink-0 gap-0 md:gap-1">
             {LIENS.map((lien) => (
               <NavLink
                 key={lien.to}

@@ -240,7 +240,7 @@ export function HeroCarousel({
 
       {/* 2. Le bandeau outremer : la signature, sous l'image, porte le texte. */}
       <div className="border-b-[3px] border-noir bg-outremer text-creme">
-        <div className="mx-auto grid max-w-page grid-cols-[96px_1fr] items-end gap-x-4 px-gouttiere pb-6 md:grid-cols-[200px_1fr_auto] md:gap-x-10 md:px-gouttiere-lg md:pb-10">
+        <div className="mx-auto grid max-w-page grid-cols-[96px_1fr] items-end gap-x-4 px-gouttiere pb-6 md:grid-cols-[200px_1fr] md:gap-x-10 md:px-gouttiere-lg md:pb-10 lg:grid-cols-[200px_1fr_auto]">
           <div className="zone -mt-16 aspect-[2/3] origin-bottom-left -rotate-2 border-[3px] border-noir shadow-dure-jaune md:-mt-40">
             {item.poster ? (
               <img
@@ -276,9 +276,12 @@ export function HeroCarousel({
             </div>
           ) : null}
 
+          {/* Carrés de position à partir de 1024 px seulement : entre 768 et 1023 px, l'affiche, les boutons et
+              les dix carrés demandaient 729 px pour 672 disponibles (page plus large que l'écran). Le compteur
+              et les flèches posés sur l'image suffisent. */}
           {count > 1 ? (
             <div
-              className="hidden gap-1.5 pb-1 md:col-start-3 md:row-span-2 md:row-start-1 md:flex md:self-end"
+              className="hidden gap-1.5 pb-1 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:flex lg:self-end"
               role="group"
               aria-label="Position dans le carrousel"
             >

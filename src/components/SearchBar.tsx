@@ -64,10 +64,10 @@ export function SearchBar({
         autoFocus={autoFocus}
         autoComplete="off"
         enterKeyHint="search"
-        className={cn("h-full flex-1", inputClassName)}
+        className={cn("h-full min-w-0 flex-1", inputClassName)}
       />
       {shortcut ? (
-        <kbd aria-hidden className="border-2 border-filet px-1.5 py-0.5 text-xs font-bold text-gris">
+        <kbd aria-hidden className="hidden border-2 border-filet px-1.5 py-0.5 text-xs font-bold text-gris lg:inline">
           /
         </kbd>
       ) : null}
