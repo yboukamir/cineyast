@@ -14,6 +14,10 @@
       "destination": "/api/share?type=personne&slug=:slug"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
       "source": "/:chemin((?!api/).*)",
       "destination": "/index.html"
     }

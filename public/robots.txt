@@ -4,3 +4,5 @@ Allow: /
 # La règle la plus précise l'emporte sur « Disallow: /api/ ».
 Allow: /api/og/
 Disallow: /api/
+
+Sitemap: https://cineyast.com/sitemap.xml

@@ -195,6 +195,18 @@ Si l'identifiant est inconnu ou si TMDB ne répond pas, la page d'origine est se
 - **En développement**, `npm run dev` sert l'application sans cette fonction : les balises des fiches ne
   sont enrichies qu'une fois déployé sur Vercel.
 
+### Sitemap
+
+`vercel.json` réécrit `/sitemap.xml` vers `api/sitemap.js`, déclaré dans `public/robots.txt` et envoyé dans
+Google Search Console (propriété « domaine » cineyast.com). Il liste l'accueil, Explorer, puis les fiches des
+listes TMDB les plus cherchées : tendances de la semaine, films populaires, mieux notés, à l'affiche en France
+et personnalités populaires, soit environ 350 URL. Les liens sont exactement ceux de l'application (même
+`slugify`, titres en français), ce que vérifie `tests/sitemap.test.ts`.
+
+- Réponse en cache une journée sur le CDN ; si une liste TMDB échoue, le sitemap reste valide avec ce qui a
+  été obtenu, en cache de dix minutes.
+- Les favoris sont exclus : la page dépend du navigateur du visiteur, un robot la verrait vide.
+
 ## 8. Attribution TMDB
 
 Le pied de page affiche les deux éléments exigés par les conditions d'utilisation de TMDB :
@@ -226,10 +238,11 @@ src/
 api/tmdb.js          proxy TMDB en fonction serverless (Vercel)
 api/share.js         balises de partage des fiches films et des pages personnes (Vercel)
 api/og/personne.js   carte de partage 1200×630 des pages personnes, polices dans api/og/_fonts (Vercel)
+api/sitemap.js       sitemap.xml : pages fixes et fiches des listes TMDB les plus cherchées (Vercel)
 server/              proxy TMDB de développement + CSP partagée
-public/              favicon, robots.txt
+public/              favicons, robots.txt (avec la ligne Sitemap)
 deploy/php/          .htaccess + proxy PHP, pour un hébergement mutualisé
-vercel.json          réécritures (/api/tmdb.php, /film/:slug, /personne/:slug, repli SPA) et en-têtes de sécurité
+vercel.json          réécritures (/api/tmdb.php, /film/:slug, /personne/:slug, /sitemap.xml, repli SPA) et en-têtes de sécurité
 tests/               tests Vitest ; réponses TMDB réelles enregistrées dans tests/fixtures
 scripts/             déploiement FTP, enregistrement des données de test
 ```
