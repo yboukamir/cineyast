@@ -75,7 +75,7 @@ describe("validation des requêtes", () => {
 describe("rendu de l'image", () => {
   it("génère un PNG 1200×630 mis en cache, avec l'affiche typographique quand le portrait manque", async () => {
     const { calls } = stubFetch();
-    const res = await call("id=287&v=2");
+    const res = await call("id=287&v=3");
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toBe("image/png");
     expect(pngSize(res.body)).toEqual({ width: 1200, height: 630 });

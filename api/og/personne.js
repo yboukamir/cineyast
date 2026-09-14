@@ -6,7 +6,7 @@
  * attendu, dans la charte « L'Affiche » : fond outremer, portrait entier dans un cadre noir
  * à ombre jaune, métier en étiquette, nom et films les plus connus à droite.
  *
- * Appelée depuis les balises générées par api/share.js : /api/og/personne?id=287&v=2
+ * Appelée depuis les balises générées par api/share.js : /api/og/personne?id=287&v=3
  * Seul l'identifiant est lu dans l'URL. Le nom et les films viennent de TMDB (clé côté
  * serveur), pour qu'on ne puisse pas fabriquer de fausse carte au nom du site.
  *
@@ -170,7 +170,7 @@ export function card(person, portrait) {
     el("div", { display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, marginLeft: 56 }, [
       el("div", { display: "flex", position: "relative", alignSelf: "flex-start", paddingLeft: 8, paddingRight: 8 }, [
         el("div", { position: "absolute", left: 0, right: 0, top: 22, height: 16, backgroundColor: C.jaune, transform: "rotate(-1.5deg)" }, []),
-        el("div", { display: "flex", fontFamily: "Bebas Neue", fontSize: 48, lineHeight: 1, color: C.creme }, "Cineyast"),
+        el("div", { display: "flex", fontFamily: "Bebas Neue", fontSize: 48, lineHeight: 1, color: C.creme }, "Cinéyast"),
       ]),
 
       el("div", { display: "flex", flexDirection: "column" }, [
@@ -189,7 +189,7 @@ export function card(person, portrait) {
                 el("div", { display: "flex", marginTop: 8, maxWidth: 682, fontSize: 32, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, title),
               ),
             ]
-          : [el("div", { display: "flex", marginTop: 30, fontSize: 30 }, "Filmographie sur Cineyast")]),
+          : [el("div", { display: "flex", marginTop: 30, fontSize: 30 }, "Filmographie sur Cinéyast")]),
       ].filter(Boolean)),
 
       el("div", { display: "flex", fontWeight: 700, fontSize: 22, letterSpacing: 1 }, "cineyast.com"),

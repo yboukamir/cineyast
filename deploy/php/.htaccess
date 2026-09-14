@@ -1,4 +1,4 @@
-# Cineyast — configuration Apache pour l'hébergement LWS
+# Cinéyast — configuration Apache pour l'hébergement LWS
 
 Options -Indexes
 DirectoryIndex index.html

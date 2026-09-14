@@ -2,12 +2,12 @@
 
 exports[`aperçu d'une fiche film > produit les balises attendues pour Fight Club (non-régression) 1`] = `
 [
-  "<title>Fight Club (1999) — Cineyast</title>",
+  "<title>Fight Club (1999) — Cinéyast</title>",
   "<meta name="description" content="Le narrateur, sans identité précise, vit seul, travaille seul, dort seul, mange seul ses plateaux‐repas pour une personne comme beaucoup d’autres personnes seules qui connaissent la misère humaine,…" />",
   "<link rel="canonical" href="https://cineyast.com/film/550-fight-club" />",
   "<link rel="preload" as="image" href="https://image.tmdb.org/t/p/w1280/c6OLXfKAk5BKeR6broC8pYiCquX.jpg" imagesrcset="https://image.tmdb.org/t/p/w780/c6OLXfKAk5BKeR6broC8pYiCquX.jpg 780w, https://image.tmdb.org/t/p/w1280/c6OLXfKAk5BKeR6broC8pYiCquX.jpg 1280w, https://image.tmdb.org/t/p/original/c6OLXfKAk5BKeR6broC8pYiCquX.jpg 1920w" imagesizes="100vw" fetchpriority="high" />",
   "<meta property="og:type" content="video.movie" />",
-  "<meta property="og:site_name" content="Cineyast" />",
+  "<meta property="og:site_name" content="Cinéyast" />",
   "<meta property="og:locale" content="fr_FR" />",
   "<meta property="og:title" content="Fight Club (1999)" />",
   "<meta property="og:description" content="Le narrateur, sans identité précise, vit seul, travaille seul, dort seul, mange seul ses plateaux‐repas pour une personne comme beaucoup d’autres personnes seules qui connaissent la misère humaine,…" />",

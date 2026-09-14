@@ -10,7 +10,7 @@ export function RouteError() {
   return (
     <div className="grid min-h-dvh place-items-center bg-creme px-gouttiere">
       <div className="w-full max-w-xl">
-        <a href="/" className="inline-block" aria-label="Cineyast, accueil">
+        <a href="/" className="inline-block" aria-label="Cinéyast, accueil">
           <Wordmark />
         </a>
         <div role="alert" className="etat etat-erreur mt-8">

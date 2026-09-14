@@ -12,7 +12,7 @@ export function Footer() {
     <footer className="mt-16 border-t-[3px] border-noir bg-noir text-creme">
       <div className="mx-auto grid max-w-page gap-10 px-gouttiere py-12 md:grid-cols-[1.4fr_1fr_1.2fr] md:px-gouttiere-lg md:py-16">
         <div>
-          <Link to="/" aria-label="Cineyast, accueil" className="inline-block">
+          <Link to="/" aria-label="Cinéyast, accueil" className="inline-block">
             <Wordmark variant="pied" />
           </Link>
           <p className="mt-5 max-w-[42ch] text-[15px] leading-relaxed text-creme/90">
@@ -54,10 +54,10 @@ export function Footer() {
           <p className="mt-4 text-sm text-creme/90">Bandes-annonces hébergées par YouTube.</p>
         </div>
       </div>
-      {/* Hors maquette, validé par Yassine : Cineyast est un projet de portfolio, son auteur doit être nommé. */}
+      {/* Hors maquette, validé par Yassine : Cinéyast est un projet de portfolio, son auteur doit être nommé. */}
       <div className="mx-auto max-w-page px-gouttiere md:px-gouttiere-lg">
         <p className="border-t-2 border-gris py-5 text-sm text-creme/80">
-          © {new Date().getFullYear()} Cineyast · Conçu et développé par Yassine Boukamir
+          © {new Date().getFullYear()} Cinéyast · Conçu et développé par Yassine Boukamir
         </p>
       </div>
     </footer>

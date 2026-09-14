@@ -16,10 +16,10 @@
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p";
-const SITE = "Cineyast";
+const SITE = "Cinéyast";
 const CANONICAL_ORIGIN = "https://cineyast.com";
 /** À incrémenter quand le dessin de la carte change : force LinkedIn et consorts à retélécharger l'image. */
-const OG_VERSION = 2;
+const OG_VERSION = 3;
 
 /** Seuls les domaines du projet peuvent servir de source pour index.html. */
 const ALLOWED_HOST = /^(?:www\.)?cineyast\.com$|^[a-z0-9-]+\.vercel\.app$/i;
@@ -253,7 +253,7 @@ export default async function handler(req, res) {
   if (shell.status === "rejected") {
     // Sans le HTML de l'application, rien à servir : surtout ne pas mettre l'erreur en cache.
     res.setHeader("Cache-Control", "no-store");
-    return res.status(502).send("Cineyast est momentanément indisponible. Réessayez dans un instant.");
+    return res.status(502).send("Cinéyast est momentanément indisponible. Réessayez dans un instant.");
   }
 
   let body = shell.value;

@@ -42,7 +42,7 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b-[3px] border-noir bg-creme">
       <div className="mx-auto max-w-page px-gouttiere md:px-gouttiere-lg">
         <div className="flex h-16 items-center gap-3 md:h-20 md:gap-8">
-          <Link to="/" aria-label="Cineyast, accueil" className="shrink-0">
+          <Link to="/" aria-label="Cinéyast, accueil" className="shrink-0">
             <Wordmark />
           </Link>
 

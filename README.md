@@ -1,4 +1,4 @@
-# Cineyast
+# Cinéyast
 
 [![CI](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml/badge.svg)](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml)
 
@@ -11,7 +11,7 @@ sortis en salle en France la même semaine il y a 25 ans, et une autre les films
 Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de l'API publique
 [TMDB](https://www.themoviedb.org/) — aucune donnée de film n'est codée en dur.
 
-![Page d'accueil de Cineyast : carrousel des tendances de la semaine](docs/capture-accueil.jpg)
+![Page d'accueil de Cinéyast : carrousel des tendances de la semaine](docs/capture-accueil.jpg)
 
 *Accueil — le film n°1 des tendances de la semaine : image cadrée, bandeau outremer et affiche qui chevauche la couture. Données réelles de l'API TMDB.*
 
@@ -202,7 +202,7 @@ Le pied de page affiche les deux éléments exigés par les conditions d'utilisa
 - la mention « Ce produit utilise l'API TMDB mais n'est pas approuvé ou certifié par TMDB » ;
 - le **logo officiel** (`public/tmdb-logo.svg`, version courte issue de
   <https://www.themoviedb.org/about/logos-attribution>), lié à themoviedb.org et moins proéminent que le
-  logotype Cineyast. Il est servi depuis le domaine, la CSP n'autorisant que les images locales et TMDB.
+  logotype Cinéyast. Il est servi depuis le domaine, la CSP n'autorisant que les images locales et TMDB.
 
 La section **« Où regarder »** des fiches films affiche les offres en France (abonnement, location, achat),
 issues de l'endpoint `watch/providers` de TMDB, lui-même alimenté par JustWatch. TMDB exige d'attribuer ces

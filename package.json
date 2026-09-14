@@ -1,7 +1,7 @@
 {
   "name": "cineyast",
   "version": "1.0.0",
-  "description": "Cineyast - decouverte et recommandation de films pour cinephiles (donnees TMDB)",
+  "description": "Cinéyast - découverte et recommandation de films pour cinéphiles (données TMDB)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

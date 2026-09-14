@@ -49,7 +49,7 @@ export default function HomePage() {
 
   return (
     <>
-      <h1 className="sr-only">Cineyast — films tendance, recherche et recommandations pour cinéphiles</h1>
+      <h1 className="sr-only">Cinéyast — films tendance, recherche et recommandations pour cinéphiles</h1>
 
       {trendingWeek.isError ? (
         <div className="mx-auto max-w-page px-gouttiere pt-8 md:px-gouttiere-lg">

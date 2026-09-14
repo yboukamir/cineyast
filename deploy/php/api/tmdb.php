@@ -1,6 +1,6 @@
 <?php
 /**
- * Cineyast — proxy TMDB pour la production (hébergement LWS / Apache + PHP).
+ * Cinéyast — proxy TMDB pour la production (hébergement LWS / Apache + PHP).
  *
  * Le navigateur appelle  /api/tmdb.php?path=/movie/550&language=fr-FR
  * et ce script relaie la requête vers https://api.themoviedb.org/3 en y

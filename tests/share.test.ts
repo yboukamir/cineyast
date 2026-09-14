@@ -30,7 +30,7 @@ describe("aperçu d'une fiche film", () => {
     stubFetch();
     const body = String((await call("type=film&slug=550-fight-club")).body);
     const lines = tags(body);
-    expect(lines.filter((l) => l.startsWith("<title>"))).toEqual(["<title>Fight Club (1999) — Cineyast</title>"]);
+    expect(lines.filter((l) => l.startsWith("<title>"))).toEqual(["<title>Fight Club (1999) — Cinéyast</title>"]);
     expect(lines.filter((l) => l.includes('"og:title"'))).toHaveLength(1);
     expect(body).not.toContain("films à découvrir, pour cinéphiles</title>");
     // L'application React reste servie.
@@ -65,7 +65,7 @@ describe("aperçu d'une page personne", () => {
     const lines = tags(String((await call("type=personne&slug=287-brad-pitt")).body));
     expect(content(lines, "og:title")).toBe("Brad Pitt");
     expect(content(lines, "og:type")).toBe("profile");
-    expect(decode(content(lines, "og:image"))).toBe("https://cineyast.com/api/og/personne?id=287&v=2");
+    expect(decode(content(lines, "og:image"))).toBe("https://cineyast.com/api/og/personne?id=287&v=3");
     expect(content(lines, "og:image:width")).toBe("1200");
     expect(content(lines, "og:image:height")).toBe("630");
     expect(content(lines, "twitter:card")).toBe("summary_large_image");
@@ -85,7 +85,7 @@ describe("aperçu d'une page personne", () => {
     stubFetch();
     expect(fixture("person-55936").biography.trim()).toBe("");
     const lines = tags(String((await call("type=personne&slug=55936")).body));
-    expect(decode(content(lines, "og:description"))).toMatch(/^Interprétation · Films les plus connus : .+\. Filmographie complète sur Cineyast\.$/);
+    expect(decode(content(lines, "og:description"))).toMatch(/^Interprétation · Films les plus connus : .+\. Filmographie complète sur Cinéyast\.$/);
     expect(content(lines, "og:url")).toBe("https://cineyast.com/personne/55936-jemaine-clement");
   });
 });
