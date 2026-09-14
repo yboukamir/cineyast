@@ -20,7 +20,7 @@ import {
   backdropUrl,
   directorsOf,
   frenchCertification,
-  frenchWatchProviders,
+  watchProviders,
   pickTrailer,
   profileSrcSet,
   profileUrl,
@@ -226,9 +226,9 @@ function MovieView({ movie }: { movie: MovieDetail }) {
 
           <section className="pt-12 md:pt-16" aria-labelledby="ou-regarder">
             <SectionHead id="ou-regarder" eyebrow="Séances à domicile">
-              Où regarder en France
+              Où regarder en Belgique
             </SectionHead>
-            <WatchProviders availability={frenchWatchProviders(movie)} releaseDate={movie.release_date} />
+            <WatchProviders availability={watchProviders(movie)} releaseDate={movie.release_date} />
           </section>
 
           {cast.length ? (

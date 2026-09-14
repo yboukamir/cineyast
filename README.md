@@ -4,7 +4,7 @@
 
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
 Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting,
-bande-annonce et offres de streaming en France, pages acteurs et réalisateurs avec leur filmographie,
+bande-annonce et offres de streaming en Belgique, pages acteurs et réalisateurs avec leur filmographie,
 recommandations, et une liste de favoris personnelle. Sur l'accueil, une rangée « Flashback » montre les films
 sortis en salle en France la même semaine il y a 25 ans, et une autre les films belges et coproductions.
 
@@ -204,7 +204,7 @@ Le pied de page affiche les deux éléments exigés par les conditions d'utilisa
   <https://www.themoviedb.org/about/logos-attribution>), lié à themoviedb.org et moins proéminent que le
   logotype Cinéyast. Il est servi depuis le domaine, la CSP n'autorisant que les images locales et TMDB.
 
-La section **« Où regarder »** des fiches films affiche les offres en France (abonnement, location, achat),
+La section **« Où regarder »** des fiches films affiche les offres en Belgique (abonnement, location, achat),
 issues de l'endpoint `watch/providers` de TMDB, lui-même alimenté par JustWatch. TMDB exige d'attribuer ces
 données à JustWatch : la mention « Disponibilités fournies par JustWatch », avec un lien, figure sous les offres.
 Elles arrivent dans la même requête que la fiche (`append_to_response`), sans appel réseau supplémentaire.

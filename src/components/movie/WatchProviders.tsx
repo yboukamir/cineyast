@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { buildGroups, type WatchGroup } from "@/lib/watchProviders";
 
 const LOGO = "https://image.tmdb.org/t/p/w92";
-/** Au-delà, les offres sont repliées : Fight Club en compte 9 en abonnement et 9 en location. */
+/** Au-delà, les offres sont repliées (un film très diffusé en compte parfois une dizaine par groupe). */
 const VISIBLE = 6;
 /** Carré de légende : jaune pour ce qui est inclus ou gratuit, outremer pour ce qui se paie à l'acte. */
 const LEGENDE: Record<string, string> = {
@@ -76,10 +76,10 @@ function NoOffer({ releaseDate }: { releaseDate?: string }) {
   let context = "Ni abonnement, ni location, ni achat n'est référencé pour ce film.";
   if (days !== null && days < 0) context = `Sa sortie en salle est prévue le ${date}.`;
   else if (days !== null && days <= 365)
-    context = `Sorti en salle le ${date} : en France, un film arrive généralement en location quelques mois après sa sortie au cinéma, et plus tard en abonnement.`;
+    context = `Sorti en salle le ${date} : un film arrive généralement en location quelques mois après sa sortie au cinéma, et plus tard en abonnement.`;
 
   return (
-    <EmptyState mark="Pas de séance" title="Aucune offre de streaming en France pour le moment.">
+    <EmptyState mark="Pas de séance" title="Aucune offre de streaming en Belgique pour le moment.">
       {context}
     </EmptyState>
   );
@@ -102,7 +102,7 @@ export function WatchProviders({ availability, releaseDate }: { availability?: W
       {/* Attribution exigée par TMDB pour utiliser ces données. */}
       <p className="mt-5 text-sm text-gris">
         Disponibilités fournies par{" "}
-        <a href="https://www.justwatch.com/fr" target="_blank" rel="noopener noreferrer" className="lien">
+        <a href="https://www.justwatch.com/be" target="_blank" rel="noopener noreferrer" className="lien">
           JustWatch
         </a>
         .

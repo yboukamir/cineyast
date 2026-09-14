@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { count, releaseDateLong, releaseYear, runtime, score } from "@/lib/format";
 import { movieHref, parseId, personHref, slugify } from "@/lib/slug";
-import { api, directorsOf, frenchCertification, frenchWatchProviders, pickTrailer, type MovieDetail } from "@/lib/tmdb";
+import { api, directorsOf, frenchCertification, watchProviders, pickTrailer, type MovieDetail } from "@/lib/tmdb";
 import { buildGroups } from "@/lib/watchProviders";
 import { fixture } from "./helpers";
 
@@ -111,15 +111,15 @@ describe("rangées de listes TMDB", () => {
   });
 });
 
-describe("regroupement des offres de streaming en France", () => {
+describe("regroupement des offres de streaming en Belgique", () => {
   const same = (a: { provider_id: number }[] = [], b: { provider_id: number }[] = []) =>
     a.length === b.length && a.every((p) => b.some((q) => q.provider_id === p.provider_id));
 
   it.each(["movie-550", "movie-496243"])("%s : location et achat fusionnés seulement s'ils sont identiques", (name) => {
-    const fr = frenchWatchProviders(fixture(name) as MovieDetail);
-    expect(fr).toBeDefined();
-    const keys = buildGroups(fr!).map((g) => g.key);
-    if (fr!.rent?.length && same(fr!.rent, fr!.buy)) {
+    const offres = watchProviders(fixture(name) as MovieDetail);
+    expect(offres).toBeDefined();
+    const keys = buildGroups(offres!).map((g) => g.key);
+    if (offres!.rent?.length && same(offres!.rent, offres!.buy)) {
       expect(keys).toContain("rent-buy");
       expect(keys).not.toContain("rent");
     } else {
@@ -128,12 +128,12 @@ describe("regroupement des offres de streaming en France", () => {
   });
 
   it("les données couvrent les deux cas (fusion et séparation)", () => {
-    const merged = (name: string) => buildGroups(frenchWatchProviders(fixture(name) as MovieDetail)!).some((g) => g.key === "rent-buy");
+    const merged = (name: string) => buildGroups(watchProviders(fixture(name) as MovieDetail)!).some((g) => g.key === "rent-buy");
     expect([merged("movie-550"), merged("movie-496243")].sort()).toEqual([false, true]);
   });
 
   it("trie les plateformes par priorité d'affichage TMDB", () => {
-    for (const group of buildGroups(frenchWatchProviders(fixture("movie-550") as MovieDetail)!)) {
+    for (const group of buildGroups(watchProviders(fixture("movie-550") as MovieDetail)!)) {
       const priorities = group.providers.map((p) => p.display_priority);
       expect(priorities).toEqual([...priorities].sort((a, b) => a - b));
     }
