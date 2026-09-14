@@ -1,4 +1,4 @@
-import { keepPreviousData, QueryClient, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, QueryClient, useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
 import { api, MAX_PAGE, TmdbError, type CatalogFilters, type MovieSummary } from "@/lib/tmdb";
 
 export const queryClient = new QueryClient({
@@ -64,6 +64,19 @@ export const usePerson = (id: number) =>
     queryKey: ["person", id],
     queryFn: ({ signal }) => api.person(id, signal),
     enabled: Number.isInteger(id) && id > 0,
+  });
+
+/** Filmographies des réalisateurs d'un film : mêmes requêtes et même cache que les pages personnes. */
+export const useDirectorsFilms = (ids: number[], enabled: boolean) =>
+  useQueries({
+    queries: ids.map((id) => ({ queryKey: ["person", id], queryFn: ({ signal }: { signal: AbortSignal }) => api.person(id, signal), enabled })),
+    combine: (results) => ({
+      persons: results.flatMap((r) => (r.data ? [r.data] : [])),
+      isPending: results.some((r) => r.isPending),
+      // Un réalisateur sur deux suffit pour remplir la rangée : erreur seulement si tout a échoué.
+      isError: results.length > 0 && results.every((r) => r.isError),
+      refetch: () => results.forEach((r) => void r.refetch()),
+    }),
   });
 
 /** Chargée seulement à la demande (« Lire en anglais »). */

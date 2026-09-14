@@ -4,6 +4,7 @@ import { ChevronLeft, Play } from "lucide-react";
 import { LiensExternes } from "@/components/LiensExternes";
 import { AffichesGalerie } from "@/components/movie/AffichesGalerie";
 import { FavoriteButton } from "@/components/movie/FavoriteButton";
+import { MemeRealisateurRow } from "@/components/movie/MemeRealisateurRow";
 import { MovieRow } from "@/components/movie/MovieRow";
 import { NoteTuiles } from "@/components/movie/NoteTuiles";
 import { Poster } from "@/components/movie/Poster";
@@ -284,6 +285,8 @@ function MovieView({ movie }: { movie: MovieDetail }) {
       </div>
 
       <AffichesGalerie movieId={movie.id} title={movie.title} affichePrincipale={movie.poster_path} />
+
+      <MemeRealisateurRow movieId={movie.id} directors={directorList} />
 
       {hasRecommendations ? (
         <MovieRow

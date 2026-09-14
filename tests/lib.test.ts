@@ -74,7 +74,7 @@ describe("extraction depuis une fiche TMDB (Fight Club)", () => {
   });
 
   it("liste les réalisateurs sans doublon", () => {
-    expect(directorsOf(movie)).toEqual([{ id: 7467, name: "David Fincher" }]);
+    expect(directorsOf(movie)).toEqual([{ id: 7467, name: "David Fincher", gender: 2 }]);
   });
 });
 

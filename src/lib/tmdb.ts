@@ -46,6 +46,8 @@ export interface CastMember {
 export interface CrewMember {
   id: number;
   name: string;
+  /** Genre TMDB : 0 inconnu, 1 femme, 2 homme, 3 non binaire. */
+  gender?: number;
   job: string;
   department: string;
 }
@@ -135,6 +137,8 @@ export interface PersonDetail {
   place_of_birth: string | null;
   profile_path: string | null;
   known_for_department: string;
+  /** Genre TMDB : 0 inconnu, 1 femme, 2 homme, 3 non binaire. */
+  gender?: number;
   movie_credits: { cast: PersonCastCredit[]; crew: PersonCrewCredit[] };
   external_ids: { imdb_id: string | null };
 }
@@ -391,11 +395,11 @@ export function frenchCertification(movie: MovieDetail): string | undefined {
 }
 
 /** Réalisateurs, sans doublon, avec leur identifiant pour lier leur page. */
-export const directorsOf = (movie: MovieDetail): Pick<CrewMember, "id" | "name">[] =>
+export const directorsOf = (movie: MovieDetail): Pick<CrewMember, "id" | "name" | "gender">[] =>
   movie.credits.crew
     .filter((c) => c.job === "Director")
     .filter((c, i, all) => all.findIndex((d) => d.id === c.id) === i)
-    .map(({ id, name }) => ({ id, name }));
+    .map(({ id, name, gender }) => ({ id, name, gender }));
 
 /** Offres dans un pays (code de src/lib/pays.ts), ou undefined si JustWatch n'en référence aucune. */
 export const watchProviders = (movie: MovieDetail, pays: string): WatchAvailability | undefined =>
