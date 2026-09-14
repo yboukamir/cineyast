@@ -18,7 +18,7 @@ export const ALLOWED_PATHS = [
   /^\/trending\/movie\/(day|week)$/,
   /^\/movie\/(popular|top_rated|now_playing|upcoming)$/,
   /^\/movie\/\d{1,9}$/,
-  /^\/movie\/\d{1,9}\/(recommendations|similar|videos|credits)$/,
+  /^\/movie\/\d{1,9}\/(recommendations|similar|videos|credits|images)$/,
   /^\/search\/movie$/,
   /^\/discover\/movie$/,
   /^\/genre\/movie\/list$/,
@@ -44,6 +44,7 @@ export const ALLOWED_PARAMS = new Set([
   "sort_by",
   "append_to_response",
   "include_video_language",
+  "include_image_language",
 ]);
 
 /** Jeton d'accès en lecture (v4) = JWT ; clé API (v3) = hash hexadécimal. */

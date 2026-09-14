@@ -97,6 +97,21 @@ export interface MovieDetail extends Omit<MovieSummary, "genre_ids"> {
   "watch/providers"?: { results: Partial<Record<string, WatchAvailability>> };
 }
 
+/** Affiche ou image d'un film (/movie/{id}/images). iso_639_1 null : image sans texte. */
+export interface MovieImage {
+  file_path: string;
+  iso_639_1: string | null;
+  vote_average: number;
+  vote_count: number;
+  width: number;
+  height: number;
+}
+
+export interface MovieImages {
+  id: number;
+  posters: MovieImage[];
+}
+
 export interface PersonCastCredit extends MovieSummary {
   character: string;
   credit_id: string;
@@ -225,6 +240,10 @@ export const api = {
       },
       signal,
     ),
+
+  /** Affiches françaises et sans texte, demandées à part : la fiche s'affiche sans les attendre. */
+  movieImages: (id: number, signal?: AbortSignal) =>
+    tmdb<MovieImages>(`/movie/${id}/images`, { include_image_language: "fr,null" }, signal),
 
   person: (id: number, signal?: AbortSignal) =>
     tmdb<PersonDetail>(`/person/${id}`, { append_to_response: "movie_credits,external_ids" }, signal),

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { ChevronLeft, Play } from "lucide-react";
 import { LiensExternes } from "@/components/LiensExternes";
+import { AffichesGalerie } from "@/components/movie/AffichesGalerie";
 import { FavoriteButton } from "@/components/movie/FavoriteButton";
 import { MovieRow } from "@/components/movie/MovieRow";
 import { NoteTuiles } from "@/components/movie/NoteTuiles";
@@ -281,6 +282,8 @@ function MovieView({ movie }: { movie: MovieDetail }) {
           />
         </aside>
       </div>
+
+      <AffichesGalerie movieId={movie.id} title={movie.title} affichePrincipale={movie.poster_path} />
 
       {hasRecommendations ? (
         <MovieRow

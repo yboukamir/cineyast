@@ -3,7 +3,7 @@
 [![CI](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml/badge.svg)](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml)
 
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
-Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting,
+Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting, galerie d'affiches,
 bande-annonce et offres de streaming du pays du visiteur (Belgique, France, Suisse, Canada…), pages acteurs et réalisateurs avec leur filmographie,
 recommandations, et une liste de favoris personnelle. Sur l'accueil, une rangée « Flashback » montre les films
 sortis en salle en France la même semaine il y a 25 ans, et une autre les films belges et coproductions. Un classement du mois montre les 5 films les mieux notés d'un genre

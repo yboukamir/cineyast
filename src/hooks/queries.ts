@@ -40,6 +40,10 @@ export const useMonthlyTop = (enabled = true) => {
   return useQuery({ queryKey: ["classement", month], queryFn: ({ signal }) => api.monthlyTop(now, signal), enabled });
 };
 
+/** Affiches d'un film : elles changent rarement, une journée de fraîcheur suffit. */
+export const useMovieImages = (id: number, enabled = true) =>
+  useQuery({ queryKey: ["movie-images", id], queryFn: ({ signal }) => api.movieImages(id, signal), enabled, staleTime: 24 * 60 * 60 * 1000 });
+
 export const useGenres = () =>
   useQuery({
     queryKey: ["genres"],
