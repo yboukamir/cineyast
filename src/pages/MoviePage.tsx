@@ -149,11 +149,11 @@ function MovieView({ movie }: { movie: MovieDetail }) {
                     return (
                       <li key={genre.id}>
                         <Link to={`/explorer?genres=${genre.id}`} className="plaque">
-                          {salle ? (
-                            <span className="plaque-n" aria-hidden>
-                              {salle}
-                            </span>
-                          ) : null}
+                          {/* Case du numéro toujours présente : les genres arrivent après la fiche, et la
+                              plaque qui s'élargissait à leur arrivée décalait la mise en page (CLS mesuré). */}
+                          <span className="plaque-n" aria-hidden>
+                            {salle ?? ""}
+                          </span>
                           <span className="plaque-t">{genre.name}</span>
                         </Link>
                       </li>

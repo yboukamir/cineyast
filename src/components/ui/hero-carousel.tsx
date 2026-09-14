@@ -53,6 +53,40 @@ export const heroTitleSize = (title: string) =>
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/** Titre et informations d'un film. `heading` : version visible (titre en h2 et lien) ; sinon copie de mesure. */
+function HeroText({ item, heading = false }: { item: HeroCarouselItem; heading?: boolean }) {
+  const Titre = heading ? "h2" : "div";
+  return (
+    <>
+      <Titre className={cn("hero-titre", heroTitleSize(item.title))}>
+        {heading && item.href ? (
+          <Link to={item.href} className="decoration-4 underline-offset-8 hover:underline">
+            {item.title}
+          </Link>
+        ) : (
+          item.title
+        )}
+      </Titre>
+      <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] font-semibold md:mt-4 md:text-lg">
+        {item.meta?.map((fact) => (
+          <React.Fragment key={fact}>
+            <span>{fact}</span>
+            <span className="size-2 border-2 border-noir bg-jaune" aria-hidden />
+          </React.Fragment>
+        ))}
+        {item.note ? (
+          <span className="inline-flex items-center gap-1.5">
+            <NoteTuiles value={item.note} size="sm" />
+            <span className="text-sm font-semibold">/10</span>
+          </span>
+        ) : (
+          <NoteAbsente className="text-[22px] text-creme" />
+        )}
+      </p>
+    </>
+  );
+}
+
 export function HeroCarousel({
   items,
   defaultIndex = 0,
@@ -114,6 +148,20 @@ export function HeroCarousel({
     section.addEventListener("wheel", onWheel, { passive: false });
     return () => section.removeEventListener("wheel", onWheel);
   }, [go, index]);
+
+  const measureRef = React.useRef<HTMLDivElement>(null);
+  const [textHeight, setTextHeight] = React.useState<number>();
+  React.useLayoutEffect(() => {
+    const box = measureRef.current;
+    if (!box) return;
+    const blocs = [...box.children];
+    const read = () => setTextHeight(Math.ceil(Math.max(0, ...blocs.map((b) => b.getBoundingClientRect().height))));
+    read();
+    // Se remesure à l'arrivée des polices et au redimensionnement.
+    const ro = new ResizeObserver(read);
+    blocs.forEach((b) => ro.observe(b));
+    return () => ro.disconnect();
+  }, [items]);
 
   const item = items[shown] ?? items[0];
   if (!item) return null;
@@ -206,32 +254,20 @@ export function HeroCarousel({
             ) : null}
           </div>
 
-          <div className={cn("min-w-0 pt-4 md:pt-7", fade)}>
-            <h2 className={cn("hero-titre", heroTitleSize(item.title))}>
-              {item.href ? (
-                <Link to={item.href} className="decoration-4 underline-offset-8 hover:underline">
-                  {item.title}
-                </Link>
-              ) : (
-                item.title
-              )}
-            </h2>
-            <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] font-semibold md:mt-4 md:text-lg">
-              {item.meta?.map((fact) => (
-                <React.Fragment key={fact}>
-                  <span>{fact}</span>
-                  <span className="size-2 border-2 border-noir bg-jaune" aria-hidden />
-                </React.Fragment>
+          <div className="relative min-w-0 pt-4 md:pt-7">
+            {/* Mesure invisible du titre et des informations de chaque film : le bloc réserve la hauteur du
+                plus haut. Sans cela, le bandeau changeait de taille à chaque film (une ou deux lignes de titre)
+                et tout le contenu en dessous sautait toutes les 6 secondes. */}
+            <div ref={measureRef} aria-hidden className="pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden">
+              {items.map((it) => (
+                <div key={it.id}>
+                  <HeroText item={it} />
+                </div>
               ))}
-              {item.note ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <NoteTuiles value={item.note} size="sm" />
-                  <span className="text-sm font-semibold">/10</span>
-                </span>
-              ) : (
-                <NoteAbsente className="text-[22px] text-creme" />
-              )}
-            </p>
+            </div>
+            <div className={fade} style={{ minHeight: textHeight }}>
+              <HeroText item={item} heading />
+            </div>
           </div>
 
           {renderActions ? (

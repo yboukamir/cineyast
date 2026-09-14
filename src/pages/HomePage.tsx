@@ -99,7 +99,8 @@ function HeroSkeleton() {
       <div className="mx-auto max-w-page md:px-gouttiere-lg md:pt-8">
         <div className="squelette aspect-[16/9] max-h-[560px] w-full border-y-[3px] border-filet md:border-[3px]" />
       </div>
-      <div className="h-[196px] border-b-[3px] border-noir bg-outremer md:h-[262px]" />
+      {/* Hauteurs mesurées du bandeau réel quand le titre le plus long occupe deux lignes (412 et 1440 px). */}
+      <div className="h-[262px] border-b-[3px] border-noir bg-outremer md:h-[291px]" />
     </div>
   );
 }
