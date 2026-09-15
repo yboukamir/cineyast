@@ -1,5 +1,40 @@
 @import "tailwindcss";
 
+/* Police de secours calée sur Figtree, le temps que Figtree se charge (font-display: swap).
+   Sans elle, le texte s'affichait d'abord en Arial, plus large en semi-gras (+3,3 %) et moins haut :
+   à l'arrivée de Figtree, les liens du sommaire se décalaient (CLS jusqu'à 0,047 sur l'accueil mobile,
+   mesuré le 15/09/2026). Largeurs calées sur les textes réels du site (sommaire en 600, menu en 700,
+   paragraphes en 400) : Arial n'a qu'une graisse forte, d'où deux réglages distincts pour 600 et 700.
+   Figtree monte à 95 % et descend à 25 % de la taille, sans interligne ; ces surcharges sont divisées
+   par size-adjust, que le navigateur applique aussi aux métriques verticales. */
+@font-face {
+  font-family: "Figtree Secours";
+  src: local("Arial"), local("ArialMT");
+  font-weight: 100 549;
+  size-adjust: 101.1%;
+  ascent-override: 94%;
+  descent-override: 24.7%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Figtree Secours";
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  font-weight: 550 649;
+  size-adjust: 93.9%;
+  ascent-override: 101.2%;
+  descent-override: 26.6%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Figtree Secours";
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  font-weight: 650 900;
+  size-adjust: 94.7%;
+  ascent-override: 100.3%;
+  descent-override: 26.4%;
+  line-gap-override: 0%;
+}
+
 /* ─── Système visuel « L'Affiche » ─────────────────────────────────────────
    Maquette validée par Yassine en septembre 2026. Jetons, base et composants
    repris de la maquette à l'identique ; seuls changent le nom des polices
@@ -24,7 +59,7 @@
 
   /* Deux familles. Bebas Neue n'a pas de minuscules : titres, chiffres et logo seulement. */
   --font-display: "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
-  --font-sans: "Figtree Variable", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Figtree Variable", "Figtree Secours", "Helvetica Neue", Arial, sans-serif;
 
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
