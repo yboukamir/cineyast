@@ -10,6 +10,7 @@ import { NoteTuiles } from "@/components/movie/NoteTuiles";
 import { Poster } from "@/components/movie/Poster";
 import { Trailer } from "@/components/movie/Trailer";
 import { PaysSelect } from "@/components/movie/PaysSelect";
+import { SagaRow } from "@/components/movie/SagaRow";
 import { WatchProviders } from "@/components/movie/WatchProviders";
 import { EmptyState, ErrorState } from "@/components/States";
 import { heroTitleSize } from "@/components/ui/hero-carousel";
@@ -283,6 +284,8 @@ function MovieView({ movie }: { movie: MovieDetail }) {
           />
         </aside>
       </div>
+
+      {movie.belongs_to_collection ? <SagaRow collection={movie.belongs_to_collection} /> : null}
 
       <AffichesGalerie movieId={movie.id} title={movie.title} affichePrincipale={movie.poster_path} />
 

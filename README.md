@@ -3,11 +3,14 @@
 [![CI](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml/badge.svg)](https://github.com/yboukamir/cineyast/actions/workflows/ci.yml)
 
 Site de découverte et de recommandation de films pour cinéphiles — [cineyast.com](https://cineyast.com).
-Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting, galerie d'affiches, films du même réalisateur,
+Tendances de la semaine, recherche par titre, filtres (genre, année, note), fiches détaillées avec casting, saga, galerie d'affiches, films du même réalisateur,
 bande-annonce et offres de streaming du pays du visiteur (Belgique, France, Suisse, Canada…), pages acteurs et réalisateurs avec leur filmographie,
 recommandations, et une liste de favoris personnelle. Sur l'accueil, une rangée « Flashback » montre les films
 sortis en salle en France la même semaine il y a 25 ans, et une autre les films belges et coproductions. Un classement du mois montre les 5 films les mieux notés d'un genre
-qui change chaque mois (horreur en octobre, documentaire en novembre…), parmi les films sortis depuis au moins un an.
+qui change chaque mois (horreur en octobre, documentaire en novembre…), parmi les films sortis depuis au moins un an ;
+en décembre, il devient le bilan de l'année (les 10 films les mieux notés sortis en France). L'accueil s'ouvre sur un sommaire
+de ses rubriques, marquées d'un onglet de couleur, et se termine par le portrait d'un cinéaste belge différent chaque mois.
+Plusieurs de ces idées viennent de la revue belge de cinéma *Surimpressions*.
 
 Conçu et développé par **Yassine Boukamir**. Toutes les données viennent de l'API publique
 [TMDB](https://www.themoviedb.org/) — aucune donnée de film n'est codée en dur.

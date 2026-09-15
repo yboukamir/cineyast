@@ -2,6 +2,7 @@ import { useId } from "react";
 import { Link } from "react-router";
 import { MovieCard } from "@/components/movie/MovieCard";
 import { EmptyState, ErrorState, PosterSkeleton } from "@/components/States";
+import { RubriqueTab, type Rubrique } from "@/components/movie/Rubrique";
 import { ScrollerArrows, useScroller } from "@/components/ui/scroller";
 import { TmdbError, type MovieSummary } from "@/lib/tmdb";
 
@@ -23,9 +24,13 @@ export interface MovieRowProps {
   query: RowSource;
   moreHref?: string;
   ranked?: boolean;
+  /** Voir MovieCard : « Épisode » pour une saga. */
+  rankLabel?: string;
+  /** Onglet de couleur de la rubrique, devant le surtitre. */
+  rubrique?: Rubrique;
 }
 
-export function MovieRow({ eyebrow, title, query, moreHref, ranked = false }: MovieRowProps) {
+export function MovieRow({ eyebrow, title, query, moreHref, ranked = false, rankLabel, rubrique }: MovieRowProps) {
   const headingId = useId();
   const movies = query.data?.results ?? [];
   const empty = !query.isPending && !query.isError && movies.length === 0;
@@ -38,7 +43,12 @@ export function MovieRow({ eyebrow, title, query, moreHref, ranked = false }: Mo
     <section aria-labelledby={headingId} className="mx-auto max-w-page px-gouttiere pt-10 md:px-gouttiere-lg md:pt-14">
       <div className="mb-2 flex items-end justify-between gap-4 md:mb-3">
         <div>
-          {eyebrow ? <p className="surtitre mb-1">{eyebrow}</p> : null}
+          {eyebrow ? (
+            <p className="surtitre mb-1 flex items-center gap-2">
+              {rubrique ? <RubriqueTab rubrique={rubrique} /> : null}
+              {eyebrow}
+            </p>
+          ) : null}
           <h2 id={headingId} className="titre-section">
             {title}
           </h2>
@@ -79,7 +89,7 @@ export function MovieRow({ eyebrow, title, query, moreHref, ranked = false }: Mo
           {query.isPending
             ? Array.from({ length: 8 }, (_, i) => <PosterSkeleton key={i} />)
             : movies.map((movie, i) => (
-                <MovieCard key={movie.id} movie={movie} sizes={SIZES} rank={ranked ? i + 1 : undefined} />
+                <MovieCard key={movie.id} movie={movie} sizes={SIZES} rank={ranked ? i + 1 : undefined} rankLabel={rankLabel} />
               ))}
         </div>
       )}

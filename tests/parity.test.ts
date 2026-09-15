@@ -86,7 +86,7 @@ describe("listes blanches des trois proxys TMDB", () => {
     expect(phpList("ALLOWED_PARAMS").sort()).toEqual(vercel);
   });
 
-  it.each(["/trending/movie/week", "/movie/popular", "/movie/550", "/movie/550/images", "/genre/movie/list", "/search/movie", "/discover/movie", "/person/287"])(
+  it.each(["/trending/movie/week", "/movie/popular", "/movie/550", "/movie/550/images", "/collection/119", "/genre/movie/list", "/search/movie", "/discover/movie", "/person/287"])(
     "le chemin utilisé par l'application %s est accepté partout",
     (path) => {
       expect(VERCEL_PATHS.some((re: RegExp) => re.test(path))).toBe(true);

@@ -31,6 +31,7 @@ const ALLOWED_PATHS = [
     '#^/discover/movie$#',
     '#^/genre/movie/list$#',
     '#^/person/\d{1,9}$#',
+    '#^/collection/\d{1,9}$#',
 ];
 
 const ALLOWED_PARAMS = [

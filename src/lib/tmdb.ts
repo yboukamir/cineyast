@@ -5,7 +5,7 @@
  */
 
 import { firstReleasesIn, flashbackMonth, flashbackWeek, MIN_FLASHBACK_MOVIES, type ReleaseWindow } from "@/lib/flashback";
-import { classementDuMois, sortiAvant, TAILLE_CLASSEMENT } from "@/lib/classement";
+import { anneeEnCours, classementDuMois, sortiAvant, tailleClassement } from "@/lib/classement";
 
 // ─── Types (sous-ensemble des réponses TMDB réellement utilisé) ─────────────
 
@@ -97,6 +97,8 @@ export interface MovieDetail extends Omit<MovieSummary, "genre_ids"> {
   recommendations: Paginated<MovieSummary>;
   release_dates: { results: ReleaseDatesByCountry[] };
   "watch/providers"?: { results: Partial<Record<string, WatchAvailability>> };
+  /** Saga à laquelle appartient le film (collection TMDB), ou null. */
+  belongs_to_collection?: { id: number; name: string } | null;
 }
 
 /** Affiche ou image d'un film (/movie/{id}/images). iso_639_1 null : image sans texte. */
@@ -107,6 +109,14 @@ export interface MovieImage {
   vote_count: number;
   width: number;
   height: number;
+}
+
+/** Saga TMDB (/collection/{id}) : les films qui la composent. */
+export interface Collection {
+  id: number;
+  name: string;
+  overview: string;
+  parts: (MovieSummary & { adult?: boolean })[];
 }
 
 export interface MovieImages {
@@ -249,6 +259,8 @@ export const api = {
   movieImages: (id: number, signal?: AbortSignal) =>
     tmdb<MovieImages>(`/movie/${id}/images`, { include_image_language: "fr,null" }, signal),
 
+  collection: (id: number, signal?: AbortSignal) => tmdb<Collection>(`/collection/${id}`, {}, signal),
+
   person: (id: number, signal?: AbortSignal) =>
     tmdb<PersonDetail>(`/person/${id}`, { append_to_response: "movie_credits,external_ids" }, signal),
 
@@ -302,9 +314,40 @@ export const api = {
       signal,
     ),
 
-  /** Classement du mois : les films du genre les mieux notés, sortis depuis au moins un an (src/lib/classement.ts). */
+  /**
+   * Classement du mois (src/lib/classement.ts) : les films du genre les mieux notés, sortis depuis au
+   * moins un an ; en décembre, les films les mieux notés sortis en France dans l'année.
+   */
   monthlyTop: async (now: Date, signal?: AbortSignal): Promise<Paginated<MovieSummary>> => {
     const classement = classementDuMois(now);
+    const taille = tailleClassement(classement);
+    if (classement.type === "annee") {
+      const { from, to } = anneeEnCours(now);
+      const pages = await Promise.all(
+        [1, 2].map((page) =>
+          tmdb<Paginated<MovieSummary>>(
+            "/discover/movie",
+            {
+              sort_by: "vote_average.desc",
+              region: REGION,
+              "release_date.gte": from,
+              "release_date.lte": to,
+              with_release_type: "2|3",
+              "vote_count.gte": classement.minVotes,
+              page,
+            },
+            signal,
+          ),
+        ),
+      );
+      // Les ressorties répondent au filtre avec leur date d'origine (Les Sept Samouraïs parmi les « films de 2024 ») :
+      // seules les premières sorties de l'année restent.
+      const results = pages
+        .flatMap((p) => p.results)
+        .filter((m) => (m.release_date ?? "") >= from && (m.release_date ?? "") <= to)
+        .slice(0, taille);
+      return { ...pages[0], results };
+    }
     const page = await tmdb<Paginated<MovieSummary>>(
       "/discover/movie",
       {
@@ -315,7 +358,7 @@ export const api = {
       },
       signal,
     );
-    return { ...page, results: page.results.slice(0, TAILLE_CLASSEMENT) };
+    return { ...page, results: page.results.slice(0, taille) };
   },
 };
 

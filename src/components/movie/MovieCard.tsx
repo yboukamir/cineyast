@@ -19,12 +19,14 @@ interface MovieCardProps {
   eager?: boolean;
   /** Pastille de classement (tendances). */
   rank?: number;
+  /** Mot lu avant le numéro par les lecteurs d'écran : « Classement », « Épisode » pour une saga. */
+  rankLabel?: string;
   /** Largeur donnée par la grille parente au lieu de la largeur fixe des rangées. */
   fluid?: boolean;
   className?: string;
 }
 
-export function MovieCard({ movie, sizes, eager, rank, fluid = false, className }: MovieCardProps) {
+export function MovieCard({ movie, sizes, eager, rank, rankLabel = "Classement", fluid = false, className }: MovieCardProps) {
   const href = movieHref(movie);
   const year = releaseYear(movie.release_date);
   const hasScore = movie.vote_average > 0 && (movie.vote_count ?? 1) > 0;
@@ -33,7 +35,7 @@ export function MovieCard({ movie, sizes, eager, rank, fluid = false, className 
     <article className={cn("carte", fluid && "w-auto snap-none md:w-auto", className)}>
       {rank ? (
         <span className="pastille">
-          <span className="sr-only">Classement </span>
+          <span className="sr-only">{rankLabel} </span>
           {rank}
         </span>
       ) : null}
